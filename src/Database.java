@@ -3,11 +3,10 @@ package server;
 import java.util.HashMap;
 
 public class Database {
-    HashMap<String, File> files = new HashMap<>();
+    private HashMap<String, File> files = new HashMap<>();
 
-    public void addFile(String fileName) {
-        File newFile = new File(fileName);
-        files.put(fileName, newFile);
+    public void addFile(File newFile) {
+        files.put(newFile.getName(), newFile);
     }
 
     public File getFIle(String fileName) {
@@ -19,5 +18,9 @@ public class Database {
 
     public void deleteFile(String fileName) {
         files.remove(fileName);
+    }
+
+    public boolean containsFIle(String fileName) {
+        return files.containsKey(fileName);
     }
 }
