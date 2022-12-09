@@ -1,5 +1,7 @@
 package server;
 
+//TODO: refactor all try/catch blocks
+
 public class Main {
 
     public static void main(String[] args) {

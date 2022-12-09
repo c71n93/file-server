@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 
 public class Server {
+    private final Database serverDatabase = new Database();
     private final String address;
     private final int port;
 
@@ -19,17 +20,16 @@ public class Server {
                 Session session = new Session(serverSocket.accept());
                 session.start();
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                System.out.println("error: " + e.getMessage());
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("error: " + e.getMessage());
         }
     }
 }
 
 class Session extends Thread {
     private final Socket socket;
-    final String msgToClient = "All files were sent!";
 
     Session(Socket socket) {
         this.socket = socket;
@@ -42,11 +42,11 @@ class Session extends Thread {
             String msg = inputStream.readUTF();
             System.out.printf("Received: %s\n", msg);
 
-            outputStream.writeUTF(msgToClient);
-            System.out.printf("Sent: %s\n", msgToClient);
+            outputStream.writeUTF("Responce");
+            System.out.printf("Sent: %s\n", "Responce");
             socket.close();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("error: " + e.getMessage());
         }
     }
 }
