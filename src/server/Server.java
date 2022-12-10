@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.*;
 
 public class Server {
-    private final Database serverDatabase = new Database();
     private final String address;
     private final int port;
 
@@ -17,7 +16,7 @@ public class Server {
         System.out.println("Server started!");
         try(ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByName(address))) {
             try {
-                Session session = new Session(serverSocket.accept(), serverDatabase);
+                Session session = new Session(serverSocket.accept());
                 session.start();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -30,18 +29,16 @@ public class Server {
 
 class Session extends Thread {
     private final Socket socket;
-    private final Database serverDatabase;
 
-    Session(Socket socket, Database servDatabase) {
+    Session(Socket socket) {
         this.socket = socket;
-        this.serverDatabase = servDatabase;
     }
 
     public void run() {
         try (DataInputStream inputStream = new DataInputStream(socket.getInputStream());
              DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
         ) {
-            ServerRequestHeandler requestHeandler = new ServerRequestHeandler(serverDatabase, inputStream, outputStream);
+            ServerRequestHeandler requestHeandler = new ServerRequestHeandler(inputStream, outputStream);
             requestHeandler.work();
             socket.close();
         } catch (Exception e) {

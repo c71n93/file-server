@@ -1,16 +1,17 @@
 package server;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import http.*;
 
 public class ServerRequestHeandler {
-    private final Database serverDatabase;
     private DataInputStream messageInputStream;
     private DataOutputStream messageOutputStream;
+    private String dataFolder = "./src/server/data/folder/"; //TODO: make a possibility to change this folder
 
-
-    public ServerRequestHeandler(Database serverDatabase, DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
-        this.serverDatabase = serverDatabase;
+    public ServerRequestHeandler(DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
         this.messageInputStream = messageInputStream;
         this.messageOutputStream = messageOutputStream;
     }
@@ -81,26 +82,49 @@ public class ServerRequestHeandler {
         return isNextRequest;
     }
 
-    //TODO: implement Request funstions
     private void getRequest(GetRequest request) {
+        String filePath = dataFolder + "/" + request.getFileName();
         try {
-            messageOutputStream.writeInt(Response.OK.code);
+            File file = new File(filePath);
+            if (!file.exists()) {
+                messageOutputStream.writeInt(Response.NOT_FOUND.code);
+            } else {
+                String content = new String(Files.readAllBytes(Paths.get(filePath)));
+                messageOutputStream.writeInt(Response.OK.code);
+                messageOutputStream.writeUTF(content);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private void putRequest(PutRequest request) {
+        String filePath = dataFolder + "/" + request.getFileName();
         try {
-            messageOutputStream.writeInt(Response.OK.code);
+            File file = new File(filePath);
+            if (file.exists() || file.isDirectory()) {
+                messageOutputStream.writeInt(Response.FORBIDDEN.code);
+            } else {
+                FileWriter writer = new FileWriter(file);
+                writer.write(request.getFileContent());
+                writer.close();
+                messageOutputStream.writeInt(Response.OK.code);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private void deleteRequest(DeleteRequest request) {
+        String filePath = dataFolder + "/" + request.getFileName();
         try {
-            messageOutputStream.writeInt(Response.OK.code);
+            File file = new File(filePath);
+            if (!file.exists()) {
+                messageOutputStream.writeInt(Response.NOT_FOUND.code);
+            } else {
+                file.delete();
+                messageOutputStream.writeInt(Response.OK.code);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

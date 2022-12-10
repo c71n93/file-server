@@ -11,4 +11,13 @@ public enum Response {
     private Response(int code) {
         this.code = code;
     }
+
+    public static Response valueOfCode(int code) {
+        for (Response r : values()) {
+            if (r.code == code) {
+                return r;
+            }
+        }
+        return null;
+    }
 }
