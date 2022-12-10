@@ -2,6 +2,7 @@ package client;
 
 import java.io.*;
 import java.util.Scanner;
+import http.*;
 
 public class ClientCLI {
     private Scanner scanner;
@@ -24,7 +25,7 @@ public class ClientCLI {
             command = scanner.next();
             isNextAction = chooseAction(command);
             try {
-                System.out.println(messageInputStream.readUTF());
+                System.out.println("Server responce: " + messageInputStream.readInt());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -33,7 +34,8 @@ public class ClientCLI {
     }
 
     private boolean chooseAction(String command) {
-        boolean isNextAction = true;
+        //TODO: make an endless work (untill exit comand occurs)
+        boolean isNextAction = false;
         switch (command) {
             case "1" -> getAction();
             case "2" -> putAction();
@@ -46,7 +48,7 @@ public class ClientCLI {
     }
 
     private void getAction() {
-        System.out.println("Enter filename: ");
+        System.out.print("Enter filename: ");
         String fileName = scanner.next();
         String request = "GET " + fileName;
         try {
@@ -57,10 +59,10 @@ public class ClientCLI {
     }
 
     private void putAction() {
-        System.out.println("Enter filename: ");
+        System.out.print("Enter filename: ");
         String fileName = scanner.next();
-        System.out.println("Enter file content: ");
-        String fileContent = scanner.nextLine();
+        System.out.print("Enter file content: ");
+        String fileContent = scanner.next();
         String request = "PUT " + fileName + " " + fileContent;
         try {
             messageOutputStream.writeUTF(request);
@@ -70,7 +72,7 @@ public class ClientCLI {
     }
 
     private void deleteAction() {
-        System.out.println("Enter filename: ");
+        System.out.print("Enter filename: ");
         String fileName = scanner.next();
         String request = "DELETE " + fileName;
         try {

@@ -1,8 +1,7 @@
 package server;
 
 import java.io.*;
-import java.net.*;
-import java.util.Scanner;
+import http.*;
 
 public class ServerRequestHeandler {
     private final Database serverDatabase;
@@ -18,7 +17,7 @@ public class ServerRequestHeandler {
 
     public void work() {
         try {
-            HTTPRequest request;
+            Request request;
             do {
                 String stringRequest = messageInputStream.readUTF();
                 request = parseStringRequest(stringRequest);
@@ -28,35 +27,35 @@ public class ServerRequestHeandler {
         }
     }
 
-    private HTTPRequest parseStringRequest(String stringRequest) {
-        HTTPRequest request;
+    private Request parseStringRequest(String stringRequest) {
+        Request request;
         String[] splittedStringRequest = stringRequest.split(" ");
         if (splittedStringRequest.length < 2) {
-            request = new HTTPRequest(HTTPRequest.Request.BAD);
+            request = new Request(Request.RequestType.BAD);
         }
         switch (splittedStringRequest[0]) {
             case "GET" -> {
                 if (splittedStringRequest.length > 2) {
-                    request = new HTTPRequest(HTTPRequest.Request.BAD);
+                    request = new Request(Request.RequestType.BAD);
                 } else {
                     String fileName = splittedStringRequest[1];
-                    request = new GETRequest(fileName);
+                    request = new GetRequest(fileName);
                 }
             }
             case "DELETE" -> {
                 if (splittedStringRequest.length > 2) {
-                    request = new HTTPRequest(HTTPRequest.Request.BAD);
+                    request = new Request(Request.RequestType.BAD);
                 } else {
                     String fileName = splittedStringRequest[1];
-                    request = new DELETERequest(fileName);
+                    request = new DeleteRequest(fileName);
                 }
             }
             case "PUT" -> {
                 String fileName = splittedStringRequest[1];
                 String fileContent = getFileContentFromRequest(stringRequest);
-                request = new PUTRequest(fileName, fileContent);
+                request = new PutRequest(fileName, fileContent);
             }
-            default -> request = new HTTPRequest(HTTPRequest.Request.BAD);
+            default -> request = new Request(Request.RequestType.BAD);
 
         }
         return request;
@@ -68,14 +67,14 @@ public class ServerRequestHeandler {
         return beginIndexOfContent == 0 ? "" : stringRequest.substring(beginIndexOfContent);
     }
 
-    private boolean handleNextRequest(HTTPRequest request) {
+    private boolean handleNextRequest(Request request) {
         //TODO: Add request END to turn off the server
         boolean isNextRequest = false;
 
         switch (request.getRequestType()) {
-            case GET -> getRequest((GETRequest)request);
-            case DELETE -> deleteRequest((DELETERequest)request);
-            case PUT -> putRequest((PUTRequest)request);
+            case GET -> getRequest((GetRequest)request);
+            case DELETE -> deleteRequest((DeleteRequest)request);
+            case PUT -> putRequest((PutRequest)request);
             case BAD -> badRequest();
         }
 
@@ -83,76 +82,35 @@ public class ServerRequestHeandler {
     }
 
     //TODO: implement Request funstions
-    private void getRequest(GETRequest request) {
+    private void getRequest(GetRequest request) {
+        try {
+            messageOutputStream.writeInt(Response.OK.code);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void putRequest(PUTRequest request) {
+    private void putRequest(PutRequest request) {
+        try {
+            messageOutputStream.writeInt(Response.OK.code);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void deleteRequest(DELETERequest request) {
+    private void deleteRequest(DeleteRequest request) {
+        try {
+            messageOutputStream.writeInt(Response.OK.code);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void badRequest() {
-    }
-}
-
-class HTTPRequest {
-    public enum Request {
-        GET, PUT, DELETE, BAD
-    }
-
-    private Request requestType;
-    
-    public HTTPRequest(Request requestType) {
-        this.requestType = requestType;
-    }
-
-    public Request getRequestType() {
-        return requestType;
-    }
-}
-
-class GETRequest extends HTTPRequest {
-    private String fileName;
-
-    public GETRequest(String fileName) {
-        super(Request.GET);
-        this.fileName = fileName;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-}
-
-class DELETERequest extends HTTPRequest {
-    private String fileName;
-
-    public DELETERequest(String fileName) {
-        super(Request.DELETE);
-        this.fileName = fileName;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-}
-
-class PUTRequest extends HTTPRequest {
-    private String fileName;
-    private String fileContent;
-
-    public PUTRequest(String fileName, String fileContent) {
-        super(Request.DELETE);
-        this.fileName = fileName;
-        this.fileContent = fileContent;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public String getFileContent() {
-        return fileContent;
+        try {
+            messageOutputStream.writeInt(Response.BAD_REQUEST.code);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

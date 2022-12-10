@@ -17,36 +17,35 @@ public class Server {
         System.out.println("Server started!");
         try(ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByName(address))) {
             try {
-                Session session = new Session(serverSocket.accept());
+                Session session = new Session(serverSocket.accept(), serverDatabase);
                 session.start();
             } catch (Exception e) {
-                System.out.println("error: " + e.getMessage());
+                e.printStackTrace();
             }
         } catch (Exception e) {
-            System.out.println("error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
 
 class Session extends Thread {
     private final Socket socket;
+    private final Database serverDatabase;
 
-    Session(Socket socket) {
+    Session(Socket socket, Database servDatabase) {
         this.socket = socket;
+        this.serverDatabase = servDatabase;
     }
 
     public void run() {
         try (DataInputStream inputStream = new DataInputStream(socket.getInputStream());
              DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
         ) {
-            String msg = inputStream.readUTF();
-            System.out.printf("Received: %s\n", msg);
-
-            outputStream.writeUTF("Responce");
-            System.out.printf("Sent: %s\n", "Responce");
+            ServerRequestHeandler requestHeandler = new ServerRequestHeandler(serverDatabase, inputStream, outputStream);
+            requestHeandler.work();
             socket.close();
         } catch (Exception e) {
-            System.out.println("error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
