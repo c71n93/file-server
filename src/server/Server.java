@@ -38,7 +38,7 @@ class Session extends Thread {
         try (DataInputStream inputStream = new DataInputStream(socket.getInputStream());
              DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
         ) {
-            ServerRequestHeandler requestHeandler = new ServerRequestHeandler(inputStream, outputStream);
+            ServerRequestHandler requestHeandler = new ServerRequestHandler(inputStream, outputStream);
             requestHeandler.work();
             socket.close();
         } catch (Exception e) {

@@ -6,12 +6,12 @@ import java.nio.file.Paths;
 
 import http.*;
 
-public class ServerRequestHeandler {
+public class ServerRequestHandler {
     private DataInputStream messageInputStream;
     private DataOutputStream messageOutputStream;
     private String dataFolder = "./src/server/data/folder/"; //TODO: make a possibility to change this folder
 
-    public ServerRequestHeandler(DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
+    public ServerRequestHandler(DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
         this.messageInputStream = messageInputStream;
         this.messageOutputStream = messageOutputStream;
     }
