@@ -2,7 +2,7 @@ package http;
 
 public class Request {
     public enum RequestType {
-        GET, PUT, DELETE, BAD
+        GET, PUT, DELETE, BAD, EXIT
     }
 
     private RequestType requestType;

@@ -9,7 +9,7 @@ import http.*;
 public class ServerRequestHandler {
     private DataInputStream messageInputStream;
     private DataOutputStream messageOutputStream;
-    private String dataFolder = "./src/server/data/folder/"; //TODO: make a possibility to change this folder
+    private String dataFolder = "./src/server/data/"; //TODO: make a possibility to change this folder
 
     public ServerRequestHandler(DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
         this.messageInputStream = messageInputStream;
@@ -31,12 +31,12 @@ public class ServerRequestHandler {
     private Request parseStringRequest(String stringRequest) {
         Request request;
         String[] splittedStringRequest = stringRequest.split(" ");
-        if (splittedStringRequest.length < 2) {
+        if (splittedStringRequest.length < 1) {
             request = new Request(Request.RequestType.BAD);
         }
         switch (splittedStringRequest[0]) {
             case "GET" -> {
-                if (splittedStringRequest.length > 2) {
+                if (splittedStringRequest.length != 2) {
                     request = new Request(Request.RequestType.BAD);
                 } else {
                     String fileName = splittedStringRequest[1];
@@ -44,7 +44,7 @@ public class ServerRequestHandler {
                 }
             }
             case "DELETE" -> {
-                if (splittedStringRequest.length > 2) {
+                if (splittedStringRequest.length != 2) {
                     request = new Request(Request.RequestType.BAD);
                 } else {
                     String fileName = splittedStringRequest[1];
@@ -52,9 +52,21 @@ public class ServerRequestHandler {
                 }
             }
             case "PUT" -> {
-                String fileName = splittedStringRequest[1];
-                String fileContent = getFileContentFromRequest(stringRequest);
-                request = new PutRequest(fileName, fileContent);
+                if (splittedStringRequest.length < 2) {
+                    request = new Request(Request.RequestType.BAD);
+                } else {
+                    String fileName = splittedStringRequest[1];
+                    String fileContent = getFileContentFromRequest(stringRequest);
+                    request = new PutRequest(fileName, fileContent);
+                }
+            }
+            case "EXIT" -> {
+                if (splittedStringRequest.length > 1) {
+                    request = new Request(Request.RequestType.BAD);
+                } else {
+                    String fileName = splittedStringRequest[1];
+                    request = new GetRequest(fileName);
+                }
             }
             default -> request = new Request(Request.RequestType.BAD);
 
@@ -69,16 +81,15 @@ public class ServerRequestHandler {
     }
 
     private boolean handleNextRequest(Request request) {
-        //TODO: Add request END to turn off the server
+        //TODO: make one client work in a loop, and server handle its requests in a loop
         boolean isNextRequest = false;
-
         switch (request.getRequestType()) {
             case GET -> getRequest((GetRequest)request);
             case DELETE -> deleteRequest((DeleteRequest)request);
             case PUT -> putRequest((PutRequest)request);
             case BAD -> badRequest();
+            case EXIT -> isNextRequest = false;
         }
-
         return isNextRequest;
     }
 

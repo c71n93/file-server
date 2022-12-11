@@ -15,11 +15,13 @@ public class Server {
     public void work() {
         System.out.println("Server started!");
         try(ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByName(address))) {
-            try {
-                Session session = new Session(serverSocket.accept());
-                session.start();
-            } catch (Exception e) {
-                e.printStackTrace();
+            while (true) {
+                try {
+                    Session session = new Session(serverSocket.accept());
+                    session.start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -48,7 +48,11 @@ public class ClientCLI {
                 System.out.println("The request was sent.");
                 deleteActionResponce();
             }
-            case "exit" -> isNextAction =  false;
+            case "exit" -> {
+                isNextAction =  false;
+                exitActionRequest();
+                System.out.println("The request was sent.");
+            }
             default -> System.out.println("error: no such command");
         }
         return isNextAction;
@@ -83,6 +87,16 @@ public class ClientCLI {
         System.out.print("Enter filename: ");
         String fileName = scanner.next();
         String request = "DELETE " + fileName;
+        try {
+            messageOutputStream.writeUTF(request);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //TODO: delete this request after pass project on JB
+    private void exitActionRequest() {
+        String request = "EXIT";
         try {
             messageOutputStream.writeUTF(request);
         } catch (IOException e) {
