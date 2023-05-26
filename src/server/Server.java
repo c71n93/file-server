@@ -40,8 +40,8 @@ class Session extends Thread {
         try (DataInputStream inputStream = new DataInputStream(socket.getInputStream());
              DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
         ) {
-            ServerRequestHandler requestHeandler = new ServerRequestHandler(inputStream, outputStream);
-            requestHeandler.work();
+            ServerRequestHandler requestHandler = new ServerRequestHandler(inputStream, outputStream);
+            requestHandler.work();
             socket.close();
         } catch (Exception e) {
             e.printStackTrace();
