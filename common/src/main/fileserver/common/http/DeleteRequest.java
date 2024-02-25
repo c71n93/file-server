@@ -1,4 +1,4 @@
-package http;
+package fileserver.common.http;
 
 public class DeleteRequest extends Request {
     private String fileName;

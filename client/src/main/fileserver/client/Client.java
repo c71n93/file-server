@@ -1,4 +1,4 @@
-package client;
+package fileserver.client;
 
 import java.io.*;
 import java.net.*;

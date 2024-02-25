@@ -1,0 +1,12 @@
+plugins {
+    id 'java-library'
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main']
+    test.java.srcDirs = ['src/test']
+}
+
+dependencies {
+    // deps
+}

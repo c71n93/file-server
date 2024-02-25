@@ -1,8 +1,8 @@
-package client;
+package fileserver.client;
 
 import java.io.*;
 import java.util.Scanner;
-import http.*;
+import fileserver.common.http.*;
 
 public class ClientCLI {
     private Scanner scanner;

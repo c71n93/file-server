@@ -1,4 +1,4 @@
-package http;
+package fileserver.common.http;
 
 public enum Response {
     OK(200),

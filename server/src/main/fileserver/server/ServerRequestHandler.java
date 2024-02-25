@@ -1,10 +1,10 @@
-package server;
+package fileserver.server;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import http.*;
+import fileserver.common.http.*;
 
 public class ServerRequestHandler {
     private DataInputStream messageInputStream;
@@ -111,6 +111,7 @@ public class ServerRequestHandler {
 
     private void putRequest(PutRequest request) {
         String filePath = dataFolder + "/" + request.getFileName();
+        System.out.println(filePath); //TODO: TO CREATE FOLDER FOR FILES
         try {
             File file = new File(filePath);
             if (file.exists() || file.isDirectory()) {

@@ -1,0 +1,30 @@
+plugins {
+    id 'java-library'
+    id 'application'
+}
+
+def mainClassName = 'fileserver.client.Main'
+application {
+    mainClass = mainClassName
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main']
+    test.java.srcDirs = ['src/test']
+}
+
+dependencies {
+    implementation project(':common')
+}
+
+jar {
+    dependsOn(':common:jar')
+
+    manifest {
+        attributes("Main-Class": mainClassName)
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

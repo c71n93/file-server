@@ -1,4 +1,4 @@
-package server;
+package fileserver.server;
 
 import java.io.*;
 import java.net.*;
@@ -38,7 +38,7 @@ class Session extends Thread {
 
     public void run() {
         try (DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream())
         ) {
             ServerRequestHandler requestHandler = new ServerRequestHandler(inputStream, outputStream);
             requestHandler.work();
