@@ -2,22 +2,24 @@ package fileserver.server;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import fileserver.common.http.*;
 
 public class ServerRequestHandler {
-    private DataInputStream messageInputStream;
-    private DataOutputStream messageOutputStream;
-    private String dataFolder = "./src/server/data/"; //TODO: make a possibility to change this folder
+    final private DataInputStream messageInputStream;
+    final private DataOutputStream messageOutputStream;
+    final private Path dataFolder;
 
-    public ServerRequestHandler(DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
+    public ServerRequestHandler(Path dataFolder, DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
+        this.dataFolder = dataFolder;
         this.messageInputStream = messageInputStream;
         this.messageOutputStream = messageOutputStream;
     }
 
     public void work() {
         try {
+            Files.createDirectories(dataFolder);
             Request request;
             do {
                 String stringRequest = messageInputStream.readUTF();

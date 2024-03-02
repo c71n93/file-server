@@ -2,12 +2,15 @@ package fileserver.server;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.Path;
 
 public class Server {
+    private final Path dataFolder;
     private final String address;
     private final int port;
 
-    Server(String address, int port) {
+    Server(Path dataFolder, String address, int port) {
+        this.dataFolder = dataFolder;
         this.address = address;
         this.port = port;
     }
@@ -17,7 +20,7 @@ public class Server {
         try(ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByName(address))) {
             while (true) {
                 try {
-                    Session session = new Session(serverSocket.accept());
+                    Session session = new Session(dataFolder, serverSocket.accept());
                     session.start();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -30,9 +33,11 @@ public class Server {
 }
 
 class Session extends Thread {
+    private final Path dataFolder;
     private final Socket socket;
 
-    Session(Socket socket) {
+    Session(Path dataFolder, Socket socket) {
+        this.dataFolder = dataFolder;
         this.socket = socket;
     }
 
@@ -40,7 +45,7 @@ class Session extends Thread {
         try (DataInputStream inputStream = new DataInputStream(socket.getInputStream());
              DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream())
         ) {
-            ServerRequestHandler requestHandler = new ServerRequestHandler(inputStream, outputStream);
+            ServerRequestHandler requestHandler = new ServerRequestHandler(dataFolder, inputStream, outputStream);
             requestHandler.work();
             socket.close();
         } catch (Exception e) {

@@ -5,9 +5,9 @@ import java.util.Scanner;
 import fileserver.common.http.*;
 
 public class ClientCLI {
-    private Scanner scanner;
-    private DataInputStream messageInputStream;
-    private DataOutputStream messageOutputStream;
+    private final Scanner scanner;
+    private final DataInputStream messageInputStream;
+    private final DataOutputStream messageOutputStream;
     
     // TODO: find out how to make enum with HTTP request, that common for Client and Server 
 
