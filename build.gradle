@@ -2,13 +2,13 @@ plugins {
     id 'java'
 }
 
-repositories {
-    mavenCentral()
-}
-
 allprojects {
     group = 'fileserver'
     version = '1.0'
+
+    repositories {
+        mavenCentral()
+    }
 
     java {
         toolchain {

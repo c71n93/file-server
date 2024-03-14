@@ -90,7 +90,6 @@ public class ServerRequestHandler {
             case DELETE -> deleteRequest((DeleteRequest)request);
             case PUT -> putRequest((PutRequest)request);
             case BAD -> badRequest();
-            case EXIT -> isNextRequest = false;
         }
         return isNextRequest;
     }
@@ -113,7 +112,7 @@ public class ServerRequestHandler {
 
     private void putRequest(PutRequest request) {
         String filePath = dataFolder + "/" + request.getFileName();
-        System.out.println(filePath); //TODO: TO CREATE FOLDER FOR FILES
+        System.out.println(filePath);
         try {
             File file = new File(filePath);
             if (file.exists() || file.isDirectory()) {

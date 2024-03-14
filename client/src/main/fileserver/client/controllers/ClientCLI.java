@@ -1,104 +1,90 @@
-package fileserver.client;
+package fileserver.client.controllers;
 
 import java.io.*;
 import java.util.Scanner;
-import fileserver.common.http.*;
+import fileserver.client.models.ParsedCommand;
+import fileserver.common.http.DeleteRequest;
+import fileserver.common.http.GetRequest;
+import fileserver.common.http.PutRequest;
+import fileserver.common.http.Response;
 
-public class ClientCLI {
+public final class ClientCLI {
     private final Scanner scanner;
-    private final DataInputStream messageInputStream;
-    private final DataOutputStream messageOutputStream;
+    private final DataInputStream messageIS;
+    private final DataOutputStream messageOS;
     
-    // TODO: find out how to make enum with HTTP request, that common for Client and Server 
+    // TODO: find out how to make enum with HTTP request, that common for Client and Server
 
-    public ClientCLI(InputStream comandInputStream, DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
-        scanner = new Scanner(comandInputStream);
-        this.messageInputStream = messageInputStream;
-        this.messageOutputStream = messageOutputStream;
+    public ClientCLI(InputStream commandIS, InputStream messageIS,
+                     OutputStream messageOS) {
+        scanner = new Scanner(commandIS);
+        this.messageIS = new DataInputStream(messageIS);
+        this.messageOS = new DataOutputStream(messageOS);
     }
 
     public void work() {
-        String command;
+        ParsedCommand.Command command;
         boolean isNextAction;
         do {
-            System.out.print("Enter action (1 - get a file, 2 - create a file, 3 - delete a file): ");
-            command = scanner.next();
+            System.out.println("Enter action (enter help for help): ");
+            command = new ParsedCommand(scanner.nextLine()).takeCommand();
             isNextAction = chooseAction(command);
         } while (isNextAction);
         scanner.close();
     }
 
-    private boolean chooseAction(String command) {
+    private boolean chooseAction(ParsedCommand.Command command) {
         //TODO: make an endless work (untill exit comand occurs)
         boolean isNextAction = false;
-        //TODO: replace comand string by Enum (mb request)
-        switch (command) {
-            case "1" -> {
-                getActionRequest();
+        switch (command.type) {
+            case GET -> {
+                getActionRequest(command);
                 System.out.println("The request was sent.");
                 getActionResponce();
             }
-            case "2" -> {
-                putActionRequest();
+            case PUT -> {
+                putActionRequest(command);
                 System.out.println("The request was sent.");
                 putActionResponce();
             }
-            case "3" -> {
-                deleteActionRequest();
+            case DELETE -> {
+                deleteActionRequest(command);
                 System.out.println("The request was sent.");
                 deleteActionResponce();
             }
-            case "exit" -> {
-                isNextAction =  false;
-                exitActionRequest();
-                System.out.println("The request was sent.");
-            }
-            default -> System.out.println("error: no such command");
+            case EXIT -> isNextAction =  false;
+            case HELP -> System.out.println(((ParsedCommand.HelpCommand) command).getHelp());
+            case INVALID -> System.out.println("Wrong command, use 'help'");
+            default -> throw new IllegalStateException("Unknown command type");
         }
         return isNextAction;
     }
 
-    private void getActionRequest() {
-        System.out.print("Enter filename: ");
-        String fileName = scanner.next();
-        String request = "GET " + fileName;
+    private void getActionRequest(ParsedCommand.Command command) {
+        final GetRequest request = ((ParsedCommand.GetCommand) command).getRequest();
+        String str = "GET " + request.getFileName();
         try {
-            messageOutputStream.writeUTF(request);
+            messageOS.writeUTF(str);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void putActionRequest() {
-        System.out.print("Enter filename: ");
-        String fileName = scanner.next();
-        scanner.nextLine(); //Consumes extra '\n' symbol
-        System.out.print("Enter file content: ");
-        String fileContent = scanner.nextLine();
-        String request = "PUT " + fileName + " " + fileContent;
+    private void putActionRequest(ParsedCommand.Command command) {
+        final PutRequest request = ((ParsedCommand.PutCommand) command).getRequest();
+        String str = "PUT " + request.getFileName() + " " + request.getFileContent();
         try {
-            messageOutputStream.writeUTF(request);
+            messageOS.writeUTF(str);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void deleteActionRequest() {
-        System.out.print("Enter filename: ");
-        String fileName = scanner.next();
-        String request = "DELETE " + fileName;
+    private void deleteActionRequest(ParsedCommand.Command command) {
+        final DeleteRequest request = ((ParsedCommand.DeleteCommand) command).getRequest();
+        String str = "DELETE " + request.getFileName();
         try {
-            messageOutputStream.writeUTF(request);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    //TODO: delete this request after pass project on JB
-    private void exitActionRequest() {
-        String request = "EXIT";
-        try {
-            messageOutputStream.writeUTF(request);
+            messageOS.writeUTF(str);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -107,10 +93,10 @@ public class ClientCLI {
     //TODO: refactor responce funtion (now they are copypast)
     private void getActionResponce() {
         try {
-            Response response = Response.valueOfCode(messageInputStream.readInt());
+            Response response = Response.valueOfCode(messageIS.readInt());
             switch (response) {
                 case OK -> {
-                    String content = messageInputStream.readUTF();
+                    String content = messageIS.readUTF();
                     System.out.printf("The content of the file is: %s\n", content);
                 }
                 case NOT_FOUND -> {
@@ -130,7 +116,7 @@ public class ClientCLI {
 
     private void putActionResponce() {
         try {
-            Response response = Response.valueOfCode(messageInputStream.readInt());
+            Response response = Response.valueOfCode(messageIS.readInt());
             switch (response) {
                 case OK -> {
                     System.out.printf("The response says that the file was created!\n");
@@ -152,7 +138,7 @@ public class ClientCLI {
 
     private void deleteActionResponce() {
         try {
-            Response response = Response.valueOfCode(messageInputStream.readInt());
+            Response response = Response.valueOfCode(messageIS.readInt());
             switch (response) {
                 case OK -> {
                     System.out.printf("The response says that the file was successfully deleted!\n");

@@ -1,30 +1,27 @@
-package fileserver.client;
+package fileserver.client.controllers;
 
 import java.io.*;
 import java.net.*;
 
-public class Client {
-    private final String serverAddress;
-    private final int serverPort;
+public final class Client {
+    private final Socket socket;
 
-    Client(String serverAddress, int serverPort) {
-        this.serverAddress = serverAddress;
-        this.serverPort = serverPort;
+    public Client(String serverAddress, int serverPort) throws IOException {
+        try {
+            this.socket = new Socket(InetAddress.getByName(serverAddress), serverPort);
+        } catch (IOException e) {
+            throw new IOException("Can't create Client. " + e.getMessage());
+        }
     }
 
     public void work() {
         System.out.println("Client started!");
-        try {
-            Socket socket = new Socket(InetAddress.getByName(serverAddress), serverPort);
-            Session session = new Session(socket);
-            session.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Session session = new Session(this.socket);
+        session.start();
     }
 }
 
-class Session extends Thread {
+final class Session extends Thread {
     private final Socket socket;
 
     Session(Socket socket) {
