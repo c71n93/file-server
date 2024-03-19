@@ -4,17 +4,25 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import fileserver.common.http.*;
 
-public class ServerRequestHandler {
-    final private DataInputStream messageInputStream;
-    final private DataOutputStream messageOutputStream;
+import fileserver.common.http.request.DeleteRequest;
+import fileserver.common.http.request.GetRequest;
+import fileserver.common.http.request.PutRequest;
+import fileserver.common.http.request.Request;
+import fileserver.common.http.response.Response;
+import fileserver.common.http.response.ResponseWithContent;
+
+// TODO: rename this class
+public class ServerRequestHandler implements AutoCloseable {
     final private Path dataFolder;
+    // TODO: join it into ServerConnection class
+    final private ObjectInputStream requestIS;
+    final private ObjectOutputStream responseOS;
 
-    public ServerRequestHandler(Path dataFolder, DataInputStream messageInputStream, DataOutputStream messageOutputStream) {
+    public ServerRequestHandler(Path dataFolder, InputStream requestIS, OutputStream responseOS) throws IOException {
         this.dataFolder = dataFolder;
-        this.messageInputStream = messageInputStream;
-        this.messageOutputStream = messageOutputStream;
+        this.responseOS = new ObjectOutputStream(responseOS);
+        this.requestIS = new ObjectInputStream(requestIS);
     }
 
     public void work() {
@@ -22,76 +30,27 @@ public class ServerRequestHandler {
             Files.createDirectories(dataFolder);
             Request request;
             do {
-                String stringRequest = messageInputStream.readUTF();
-                request = parseStringRequest(stringRequest);
+                request = (Request) requestIS.readObject();
             } while(handleNextRequest(request));
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
-    }
-
-    private Request parseStringRequest(String stringRequest) {
-        Request request;
-        String[] splittedStringRequest = stringRequest.split(" ");
-        if (splittedStringRequest.length < 1) {
-            request = new Request(Request.RequestType.BAD);
-        }
-        switch (splittedStringRequest[0]) {
-            case "GET" -> {
-                if (splittedStringRequest.length != 2) {
-                    request = new Request(Request.RequestType.BAD);
-                } else {
-                    String fileName = splittedStringRequest[1];
-                    request = new GetRequest(fileName);
-                }
-            }
-            case "DELETE" -> {
-                if (splittedStringRequest.length != 2) {
-                    request = new Request(Request.RequestType.BAD);
-                } else {
-                    String fileName = splittedStringRequest[1];
-                    request = new DeleteRequest(fileName);
-                }
-            }
-            case "PUT" -> {
-                if (splittedStringRequest.length < 2) {
-                    request = new Request(Request.RequestType.BAD);
-                } else {
-                    String fileName = splittedStringRequest[1];
-                    String fileContent = getFileContentFromRequest(stringRequest);
-                    request = new PutRequest(fileName, fileContent);
-                }
-            }
-            case "EXIT" -> {
-                if (splittedStringRequest.length > 1) {
-                    request = new Request(Request.RequestType.BAD);
-                } else {
-                    String fileName = splittedStringRequest[1];
-                    request = new GetRequest(fileName);
-                }
-            }
-            default -> request = new Request(Request.RequestType.BAD);
-
-        }
-        return request;
-    }
-
-    private String getFileContentFromRequest(String stringRequest) {
-        // Here we find an index of the second " ". After this index, the content starts.
-        int beginIndexOfContent = stringRequest.indexOf(" ", stringRequest.indexOf(" ") + 1) + 1;
-        return beginIndexOfContent == 0 ? "" : stringRequest.substring(beginIndexOfContent);
     }
 
     private boolean handleNextRequest(Request request) {
         //TODO: make one client work in a loop, and server handle its requests in a loop
-        boolean isNextRequest = false;
-        switch (request.getRequestType()) {
+        switch (request.getType()) {
             case GET -> getRequest((GetRequest)request);
             case DELETE -> deleteRequest((DeleteRequest)request);
             case PUT -> putRequest((PutRequest)request);
+            case CLOSE -> {
+                return false;
+            }
             case BAD -> badRequest();
         }
-        return isNextRequest;
+        return true;
     }
 
     private void getRequest(GetRequest request) {
@@ -99,11 +58,10 @@ public class ServerRequestHandler {
         try {
             File file = new File(filePath);
             if (!file.exists()) {
-                messageOutputStream.writeInt(Response.NOT_FOUND.code);
+                responseOS.writeObject(new Response(Response.ResponseType.NOT_FOUND));
             } else {
                 String content = new String(Files.readAllBytes(Paths.get(filePath)));
-                messageOutputStream.writeInt(Response.OK.code);
-                messageOutputStream.writeUTF(content);
+                responseOS.writeObject(new ResponseWithContent(Response.ResponseType.OK, content));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -116,12 +74,12 @@ public class ServerRequestHandler {
         try {
             File file = new File(filePath);
             if (file.exists() || file.isDirectory()) {
-                messageOutputStream.writeInt(Response.FORBIDDEN.code);
+                responseOS.writeObject(new Response(Response.ResponseType.NOT_FOUND));
             } else {
                 FileWriter writer = new FileWriter(file);
                 writer.write(request.getFileContent());
                 writer.close();
-                messageOutputStream.writeInt(Response.OK.code);
+                responseOS.writeObject(new Response(Response.ResponseType.OK));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -133,10 +91,10 @@ public class ServerRequestHandler {
         try {
             File file = new File(filePath);
             if (!file.exists()) {
-                messageOutputStream.writeInt(Response.NOT_FOUND.code);
+                responseOS.writeObject(new Response(Response.ResponseType.NOT_FOUND));
             } else {
                 file.delete();
-                messageOutputStream.writeInt(Response.OK.code);
+                responseOS.writeObject(new Response(Response.ResponseType.OK));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -145,9 +103,15 @@ public class ServerRequestHandler {
 
     private void badRequest() {
         try {
-            messageOutputStream.writeInt(Response.BAD_REQUEST.code);
+            responseOS.writeInt(Response.ResponseType.BAD_REQUEST.code);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        responseOS.close();
+        requestIS.close();
     }
 }

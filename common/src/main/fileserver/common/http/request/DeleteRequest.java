@@ -1,7 +1,9 @@
-package fileserver.common.http;
+package fileserver.common.http.request;
+
+import fileserver.common.http.request.Request;
 
 public class DeleteRequest extends Request {
-    private String fileName;
+    private final String fileName;
 
     public DeleteRequest(String fileName) {
         super(RequestType.DELETE);

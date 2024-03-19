@@ -1,8 +1,8 @@
 package fileserver.client.models;
 
-import fileserver.common.http.DeleteRequest;
-import fileserver.common.http.GetRequest;
-import fileserver.common.http.PutRequest;
+import fileserver.common.http.request.DeleteRequest;
+import fileserver.common.http.request.GetRequest;
+import fileserver.common.http.request.PutRequest;
 
 /**
  * Class for parsing commands to {@link fileserver.client.controllers.ClientCLI}

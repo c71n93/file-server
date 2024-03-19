@@ -3,26 +3,27 @@ package fileserver.client.controllers;
 import java.io.*;
 import java.util.Scanner;
 import fileserver.client.models.ParsedCommand;
-import fileserver.common.http.DeleteRequest;
-import fileserver.common.http.GetRequest;
-import fileserver.common.http.PutRequest;
-import fileserver.common.http.Response;
+import fileserver.common.http.request.CloseRequest;
+import fileserver.common.http.response.Response;
+import fileserver.common.http.response.ResponseWithContent;
 
-public final class ClientCLI {
+public final class ClientCLI implements AutoCloseable {
     private final Scanner scanner;
-    private final DataInputStream messageIS;
-    private final DataOutputStream messageOS;
+
+    // TODO: join it into ServerConnection class
+    private final ObjectInputStream responseIS;
+    private final ObjectOutputStream requestOS;
     
     // TODO: find out how to make enum with HTTP request, that common for Client and Server
 
-    public ClientCLI(InputStream commandIS, InputStream messageIS,
-                     OutputStream messageOS) {
+    public ClientCLI(InputStream commandIS, InputStream responseIS,
+                     OutputStream requestOS) throws IOException {
         scanner = new Scanner(commandIS);
-        this.messageIS = new DataInputStream(messageIS);
-        this.messageOS = new DataOutputStream(messageOS);
+        this.requestOS = new ObjectOutputStream(requestOS);
+        this.responseIS = new ObjectInputStream(responseIS);
     }
 
-    public void work() {
+    public void work() throws IOException {
         ParsedCommand.Command command;
         boolean isNextAction;
         do {
@@ -33,71 +34,50 @@ public final class ClientCLI {
         scanner.close();
     }
 
-    private boolean chooseAction(ParsedCommand.Command command) {
-        //TODO: make an endless work (untill exit comand occurs)
-        boolean isNextAction = false;
+    public void workOnce() throws IOException {
+        ParsedCommand.Command command;
+        System.out.println("Enter action (enter help for help): ");
+        command = new ParsedCommand(scanner.nextLine()).takeCommand();
+        chooseAction(command);
+        scanner.close();
+    }
+
+    private boolean chooseAction(ParsedCommand.Command command) throws IOException {
+        boolean isNextAction = true;
         switch (command.type) {
             case GET -> {
-                getActionRequest(command);
+                requestOS.writeObject(((ParsedCommand.GetCommand) command).getRequest());
                 System.out.println("The request was sent.");
                 getActionResponce();
             }
             case PUT -> {
-                putActionRequest(command);
+                requestOS.writeObject(((ParsedCommand.PutCommand) command).getRequest());
                 System.out.println("The request was sent.");
                 putActionResponce();
             }
             case DELETE -> {
-                deleteActionRequest(command);
+                requestOS.writeObject(((ParsedCommand.DeleteCommand) command).getRequest());
                 System.out.println("The request was sent.");
                 deleteActionResponce();
             }
-            case EXIT -> isNextAction =  false;
             case HELP -> System.out.println(((ParsedCommand.HelpCommand) command).getHelp());
             case INVALID -> System.out.println("Wrong command, use 'help'");
+            case EXIT -> {
+                requestOS.writeObject(new CloseRequest());
+                isNextAction =  false;
+            }
             default -> throw new IllegalStateException("Unknown command type");
         }
         return isNextAction;
     }
 
-    private void getActionRequest(ParsedCommand.Command command) {
-        final GetRequest request = ((ParsedCommand.GetCommand) command).getRequest();
-        String str = "GET " + request.getFileName();
-        try {
-            messageOS.writeUTF(str);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void putActionRequest(ParsedCommand.Command command) {
-        final PutRequest request = ((ParsedCommand.PutCommand) command).getRequest();
-        String str = "PUT " + request.getFileName() + " " + request.getFileContent();
-        try {
-            messageOS.writeUTF(str);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void deleteActionRequest(ParsedCommand.Command command) {
-        final DeleteRequest request = ((ParsedCommand.DeleteCommand) command).getRequest();
-        String str = "DELETE " + request.getFileName();
-        try {
-            messageOS.writeUTF(str);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     //TODO: refactor responce funtion (now they are copypast)
     private void getActionResponce() {
         try {
-            Response response = Response.valueOfCode(messageIS.readInt());
-            switch (response) {
+            Response response = (Response) responseIS.readObject();
+            switch (response.getType()) {
                 case OK -> {
-                    String content = messageIS.readUTF();
-                    System.out.printf("The content of the file is: %s\n", content);
+                    System.out.printf("The content of the file is: %s\n", ((ResponseWithContent) response).getContent());
                 }
                 case NOT_FOUND -> {
                     System.out.printf("The response says that the file was not found!\n");
@@ -109,20 +89,20 @@ public final class ClientCLI {
                     System.out.printf("The response says that the request was incorrect!\n");
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     private void putActionResponce() {
         try {
-            Response response = Response.valueOfCode(messageIS.readInt());
-            switch (response) {
+            Response response = (Response) responseIS.readObject();
+            switch (response.getType()) {
                 case OK -> {
                     System.out.printf("The response says that the file was created!\n");
                 }
                 case NOT_FOUND -> {
-                    System.out.printf("The response says that the file was not found!\n");
+                    System.out.printf("The response says that the file already exist!\n");
                 }
                 case FORBIDDEN -> {
                     System.out.printf("The response says that creating the file was forbidden!\n");
@@ -131,15 +111,15 @@ public final class ClientCLI {
                     System.out.printf("The response says that the request was incorrect!\n");
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     private void deleteActionResponce() {
         try {
-            Response response = Response.valueOfCode(messageIS.readInt());
-            switch (response) {
+            Response response = (Response) responseIS.readObject();
+            switch (response.getType()) {
                 case OK -> {
                     System.out.printf("The response says that the file was successfully deleted!\n");
                 }
@@ -155,6 +135,14 @@ public final class ClientCLI {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        requestOS.close();
+        responseIS.close();
     }
 }

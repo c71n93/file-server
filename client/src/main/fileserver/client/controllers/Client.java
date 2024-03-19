@@ -29,12 +29,15 @@ final class Session extends Thread {
     }
 
     public void run() {
-        try (DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+        try (
+            ClientCLI cli = new ClientCLI(
+                System.in,
+                socket.getInputStream(),
+                socket.getOutputStream()
+            )
         ) {
-            ClientCLI clientCLI = new ClientCLI(System.in, inputStream, outputStream);
-            clientCLI.work();
-            socket.close();
+            cli.work();
+            socket.close(); //TODO: why?
         } catch (Exception e) {
             e.printStackTrace();
         }

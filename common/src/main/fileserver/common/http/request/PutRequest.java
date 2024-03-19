@@ -1,8 +1,10 @@
-package fileserver.common.http;
+package fileserver.common.http.request;
+
+import fileserver.common.http.request.Request;
 
 public class PutRequest extends Request {
-    private String fileName;
-    private String fileContent;
+    private final String fileName;
+    private final String fileContent;
 
     public PutRequest(String fileName, String fileContent) {
         super(RequestType.PUT);

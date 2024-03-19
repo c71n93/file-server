@@ -1,6 +1,5 @@
 package fileserver.server;
 
-import java.io.*;
 import java.net.*;
 import java.nio.file.Path;
 
@@ -42,11 +41,14 @@ class Session extends Thread {
     }
 
     public void run() {
-        try (DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream())
+        try (
+            ServerRequestHandler handler = new ServerRequestHandler(
+                dataFolder,
+                socket.getInputStream(),
+                socket.getOutputStream()
+            )
         ) {
-            ServerRequestHandler requestHandler = new ServerRequestHandler(dataFolder, inputStream, outputStream);
-            requestHandler.work();
+            handler.work();
             socket.close();
         } catch (Exception e) {
             e.printStackTrace();
