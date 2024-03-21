@@ -1,6 +1,7 @@
 package fileserver.client.controllers;
 
 import fileserver.client.models.ParsedCommand;
+import fileserver.client.models.ServerConnection;
 import fileserver.common.http.request.CloseRequest;
 import fileserver.common.http.request.DeleteRequest;
 import fileserver.common.http.request.GetRequest;
@@ -33,7 +34,9 @@ public class ClientCLITest {
         );
         final ByteArrayInputStream responseIS = getAppropriateResponseIS(params.command);
         final ByteArrayOutputStream requestOS = new ByteArrayOutputStream();
-        new ClientCLI(commandIS, responseIS, requestOS).workOnce();
+        try (ServerConnection connection = new ServerConnection(requestOS, responseIS)) {
+            new ClientCLI(commandIS, connection).workOnce();
+        }
         final ObjectInputStream resultIS = new ObjectInputStream(
             new ByteArrayInputStream(requestOS.toByteArray())
         );
