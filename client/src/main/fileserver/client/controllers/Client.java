@@ -10,7 +10,7 @@ public final class Client {
         try {
             this.socket = new Socket(InetAddress.getByName(serverAddress), serverPort);
         } catch (IOException e) {
-            throw new IOException("Can't create Client. " + e.getMessage());
+            throw new IOException("Can't create Client. " + e.getMessage(), e);
         }
     }
 

@@ -3,6 +3,7 @@ package fileserver.client.models;
 import fileserver.common.http.request.DeleteRequest;
 import fileserver.common.http.request.GetRequest;
 import fileserver.common.http.request.PutRequest;
+import fileserver.common.http.response.Response;
 
 /**
  * Class for parsing commands to {@link fileserver.client.controllers.ClientCLI}
@@ -12,12 +13,12 @@ public final class ParsedCommand {
 
     public Command takeCommand() {
         final String[] splitCommand = command.split(" ");
-        return switch (splitCommand[0]) {
-            case "get" -> parseGet(splitCommand);
-            case "put" -> parsePut(splitCommand);
-            case "delete" -> parseDelete(splitCommand);
-            case "exit" -> new ExitCommand();
-            case "help" -> new HelpCommand();
+        return switch (CommandsType.value(splitCommand[0])) {
+            case GET -> parseGet(splitCommand);
+            case PUT -> parsePut(splitCommand);
+            case DELETE -> parseDelete(splitCommand);
+            case EXIT -> new ExitCommand();
+            case HELP -> new HelpCommand();
             default -> new InvalidCommand();
         };
     }
@@ -118,11 +119,29 @@ public final class ParsedCommand {
     }
 
     public enum CommandsType {
-        GET,
-        PUT,
-        DELETE,
-        HELP,
-        EXIT,
-        INVALID
+        GET("get"),
+        PUT("put"),
+        DELETE("delete"),
+        HELP("help"),
+        EXIT("exit"),
+        INVALID;
+
+        public final String name;
+
+        CommandsType(String name) {
+            this.name = name;
+        }
+        CommandsType() {
+            this.name = "invalid";
+        }
+
+        public static CommandsType value(String name) {
+            for (CommandsType c : CommandsType.values()) {
+                if (name.equals(c.name)) {
+                    return c;
+                }
+            }
+            return INVALID;
+        }
     }
 }

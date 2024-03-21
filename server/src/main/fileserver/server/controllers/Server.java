@@ -1,4 +1,4 @@
-package fileserver.server;
+package fileserver.server.controllers;
 
 import java.net.*;
 import java.nio.file.Path;
@@ -8,7 +8,7 @@ public class Server {
     private final String address;
     private final int port;
 
-    Server(Path dataFolder, String address, int port) {
+    public Server(Path dataFolder, String address, int port) {
         this.dataFolder = dataFolder;
         this.address = address;
         this.port = port;

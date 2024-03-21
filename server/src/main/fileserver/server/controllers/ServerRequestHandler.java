@@ -1,4 +1,4 @@
-package fileserver.server;
+package fileserver.server.controllers;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -39,6 +39,19 @@ public class ServerRequestHandler implements AutoCloseable {
         }
     }
 
+    public void workOnce() {
+        try {
+            Files.createDirectories(dataFolder);
+            Request request;
+            request = (Request) requestIS.readObject();
+            handleNextRequest(request);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private boolean handleNextRequest(Request request) {
         //TODO: make one client work in a loop, and server handle its requests in a loop
         switch (request.getType()) {
@@ -46,9 +59,10 @@ public class ServerRequestHandler implements AutoCloseable {
             case DELETE -> deleteRequest((DeleteRequest)request);
             case PUT -> putRequest((PutRequest)request);
             case CLOSE -> {
+                closeRequest();
                 return false;
             }
-            case BAD -> badRequest();
+            default -> badRequest();
         }
         return true;
     }
@@ -61,7 +75,7 @@ public class ServerRequestHandler implements AutoCloseable {
                 responseOS.writeObject(new Response(Response.ResponseType.NOT_FOUND));
             } else {
                 String content = new String(Files.readAllBytes(Paths.get(filePath)));
-                responseOS.writeObject(new ResponseWithContent(Response.ResponseType.OK, content));
+                responseOS.writeObject(new ResponseWithContent(content));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -70,7 +84,6 @@ public class ServerRequestHandler implements AutoCloseable {
 
     private void putRequest(PutRequest request) {
         String filePath = dataFolder + "/" + request.getFileName();
-        System.out.println(filePath);
         try {
             File file = new File(filePath);
             if (file.exists() || file.isDirectory()) {
@@ -103,7 +116,15 @@ public class ServerRequestHandler implements AutoCloseable {
 
     private void badRequest() {
         try {
-            responseOS.writeInt(Response.ResponseType.BAD_REQUEST.code);
+            responseOS.writeObject(new Response(Response.ResponseType.BAD_REQUEST));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void closeRequest() {
+        try {
+            responseOS.writeObject(new Response(Response.ResponseType.OK));
         } catch (IOException e) {
             e.printStackTrace();
         }

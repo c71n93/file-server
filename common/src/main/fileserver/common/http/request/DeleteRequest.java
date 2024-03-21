@@ -1,8 +1,6 @@
 package fileserver.common.http.request;
 
-import fileserver.common.http.request.Request;
-
-public class DeleteRequest extends Request {
+public final class DeleteRequest extends Request {
     private final String fileName;
 
     public DeleteRequest(String fileName) {
@@ -12,5 +10,15 @@ public class DeleteRequest extends Request {
 
     public String getFileName() {
         return fileName;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (super.equals(other)) {
+            DeleteRequest that = (DeleteRequest) other;
+            return this.fileName.equals(that.fileName);
+        } else {
+            return false;
+        }
     }
 }

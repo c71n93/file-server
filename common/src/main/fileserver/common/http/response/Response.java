@@ -1,5 +1,7 @@
 package fileserver.common.http.response;
 
+import fileserver.common.http.request.Request;
+
 import java.io.Serializable;
 
 public class Response implements Serializable {
@@ -11,17 +13,17 @@ public class Response implements Serializable {
 
         public final int code;
 
-        private ResponseType(int code) {
+        ResponseType(int code) {
             this.code = code;
         }
 
-        public static ResponseType valueOfCode(int code) {
-            for (ResponseType r : values()) {
+        public static ResponseType value(int code) {
+            for (ResponseType r : ResponseType.values()) {
                 if (r.code == code) {
                     return r;
                 }
             }
-            return null;
+            throw new IllegalArgumentException("Invalid response code");
         }
     }
 
@@ -35,4 +37,10 @@ public class Response implements Serializable {
         return type;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || getClass() != other.getClass()) return false;
+        return this.type == ((Response) other).type;
+    }
 }

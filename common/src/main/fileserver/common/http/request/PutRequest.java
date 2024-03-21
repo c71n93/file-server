@@ -1,8 +1,6 @@
 package fileserver.common.http.request;
 
-import fileserver.common.http.request.Request;
-
-public class PutRequest extends Request {
+public final class PutRequest extends Request {
     private final String fileName;
     private final String fileContent;
 
@@ -18,5 +16,15 @@ public class PutRequest extends Request {
 
     public String getFileContent() {
         return fileContent;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (super.equals(other)) {
+            PutRequest that = (PutRequest) other;
+            return this.fileContent.equals(that.fileContent) && this.fileName.equals(that.fileName);
+        } else {
+            return false;
+        }
     }
 }

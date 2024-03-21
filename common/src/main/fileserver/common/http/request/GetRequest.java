@@ -1,8 +1,6 @@
 package fileserver.common.http.request;
 
-import fileserver.common.http.request.Request;
-
-public class GetRequest extends Request {
+public final class GetRequest extends Request {
     private final String fileName;
 
     public GetRequest(String fileName) {
@@ -12,5 +10,15 @@ public class GetRequest extends Request {
 
     public String getFileName() {
         return fileName;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (super.equals(other)) {
+            GetRequest that = (GetRequest) other;
+            return this.fileName.equals(that.fileName);
+        } else {
+            return false;
+        }
     }
 }
