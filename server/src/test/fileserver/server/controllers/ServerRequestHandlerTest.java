@@ -7,20 +7,23 @@ import fileserver.common.http.request.PutRequest;
 import fileserver.common.http.request.Request;
 import fileserver.common.http.response.Response;
 import fileserver.common.http.response.ResponseWithContent;
+import fileserver.server.models.ClientConnection;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import javax.swing.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -39,7 +42,9 @@ public class ServerRequestHandlerTest {
         }
         final ByteArrayInputStream requestIS = getAppropriateRequestIS(params.request);
         final ByteArrayOutputStream responseOS = new ByteArrayOutputStream();
-        new ServerRequestHandler(tmpDir, requestIS, responseOS).workOnce();
+        try (ClientTestConnection connection = new ClientTestConnection(responseOS, requestIS)) {
+            new ServerRequestHandler(tmpDir, connection).workOnce();
+        }
         final ObjectInputStream resultIS = new ObjectInputStream(
             new ByteArrayInputStream(responseOS.toByteArray())
         );
@@ -91,4 +96,27 @@ public class ServerRequestHandlerTest {
     private record TestArg(Request request, Response response) {
     }
 
+    private static final class ClientTestConnection implements ClientConnection {
+        private final ObjectOutputStream responseOS;
+        private final ObjectInputStream requestIS;
+
+        public ClientTestConnection(final OutputStream responseOS, final InputStream requestIS) throws IOException {
+            this.responseOS = new ObjectOutputStream(responseOS);
+            this.requestIS = new ObjectInputStream(requestIS);
+        }
+
+        @Override
+        public void close() throws IOException {
+            requestIS.close();
+            responseOS.close();
+        }
+        @Override
+        public ObjectOutputStream responseOS() {
+            return responseOS;
+        }
+        @Override
+        public ObjectInputStream requestIS() {
+            return requestIS;
+        }
+    }
 }

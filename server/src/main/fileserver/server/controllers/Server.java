@@ -1,14 +1,16 @@
 package fileserver.server.controllers;
 
+import fileserver.server.models.ClientSocketConnection;
+
 import java.net.*;
 import java.nio.file.Path;
 
 public class Server {
     private final Path dataFolder;
-    private final String address;
+    private final InetAddress address;
     private final int port;
 
-    public Server(Path dataFolder, String address, int port) {
+    public Server(final Path dataFolder, final InetAddress address, final int port) {
         this.dataFolder = dataFolder;
         this.address = address;
         this.port = port;
@@ -16,10 +18,10 @@ public class Server {
 
     public void work() {
         System.out.println("Server started!");
-        try(ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByName(address))) {
+        try(ServerSocket serverSocket = new ServerSocket(port, 50, address)) {
             while (true) {
-                try {
-                    Session session = new Session(dataFolder, serverSocket.accept());
+                try (ClientSocketConnection connection = new ClientSocketConnection(serverSocket.accept())) {
+                    Session session = new Session(dataFolder, connection);
                     session.start();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -33,23 +35,16 @@ public class Server {
 
 class Session extends Thread {
     private final Path dataFolder;
-    private final Socket socket;
+    private final ClientSocketConnection connection;
 
-    Session(Path dataFolder, Socket socket) {
+    Session(final Path dataFolder, final ClientSocketConnection connection) {
         this.dataFolder = dataFolder;
-        this.socket = socket;
+        this.connection = connection;
     }
 
     public void run() {
-        try (
-            ServerRequestHandler handler = new ServerRequestHandler(
-                dataFolder,
-                socket.getInputStream(),
-                socket.getOutputStream()
-            )
-        ) {
-            handler.work();
-            socket.close();
+        try {
+            new ServerRequestHandler(dataFolder, connection).work();
         } catch (Exception e) {
             e.printStackTrace();
         }

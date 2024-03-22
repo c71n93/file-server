@@ -1,7 +1,8 @@
 package fileserver.client.controllers;
 
 import fileserver.client.models.ParsedCommand;
-import fileserver.client.models.ServerConnection;
+import fileserver.client.models.connection.ServerConnection;
+import fileserver.client.models.connection.ServerSocketConnection;
 import fileserver.common.http.request.CloseRequest;
 import fileserver.common.http.request.DeleteRequest;
 import fileserver.common.http.request.GetRequest;
@@ -16,13 +17,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class ClientCLITest {
+public final class ClientCLITest {
     static final String filename = "file";
     static final String content = "content";
 
@@ -34,7 +37,7 @@ public class ClientCLITest {
         );
         final ByteArrayInputStream responseIS = getAppropriateResponseIS(params.command);
         final ByteArrayOutputStream requestOS = new ByteArrayOutputStream();
-        try (ServerConnection connection = new ServerConnection(requestOS, responseIS)) {
+        try (ServerTestConnection connection = new ServerTestConnection(requestOS, responseIS)) {
             new ClientCLI(commandIS, connection).workOnce();
         }
         final ObjectInputStream resultIS = new ObjectInputStream(
@@ -108,5 +111,29 @@ public class ClientCLITest {
     }
 
     private record TestArg(String command, Optional<Request> request) {
+    }
+
+    private static final class ServerTestConnection implements ServerConnection {
+        private final ObjectOutputStream requestOS;
+        private final ObjectInputStream responseIS;
+
+        ServerTestConnection(OutputStream requestOS, InputStream requestIS) throws IOException {
+            this.requestOS = new ObjectOutputStream(requestOS);
+            this.responseIS = new ObjectInputStream(requestIS);
+        }
+
+        @Override
+        public ObjectOutputStream requestOS() {
+            return requestOS;
+        }
+        @Override
+        public ObjectInputStream responseIS() {
+            return responseIS;
+        }
+        @Override
+        public void close() throws IOException {
+            requestOS.close();
+            responseIS.close();
+        }
     }
 }
