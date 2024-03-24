@@ -1,4 +1,4 @@
-package fileserver.common.http.request;
+package fileserver.common.httpc.request;
 
 import java.io.Serializable;
 

@@ -1,4 +1,4 @@
-package fileserver.server.models;
+package fileserver.server.models.connection;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;

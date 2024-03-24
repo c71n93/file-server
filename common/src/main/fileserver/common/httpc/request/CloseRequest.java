@@ -1,6 +1,6 @@
-package fileserver.common.http.request;
+package fileserver.common.httpc.request;
 
-// TODO: This is not HTTP request (extreme measures of bad design)
+// This is not HTTP request (extreme measures of bad design)
 public final class CloseRequest extends Request{
     public CloseRequest() {
         super(RequestType.CLOSE);

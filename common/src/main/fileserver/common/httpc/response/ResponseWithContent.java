@@ -1,6 +1,4 @@
-package fileserver.common.http.response;
-
-import fileserver.common.http.request.GetRequest;
+package fileserver.common.httpc.response;
 
 public class ResponseWithContent extends Response {
     String content;

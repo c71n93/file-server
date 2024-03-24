@@ -4,10 +4,9 @@ import java.io.*;
 import java.util.Scanner;
 import fileserver.client.models.ParsedCommand;
 import fileserver.client.models.connection.ServerConnection;
-import fileserver.client.models.connection.ServerSocketConnection;
-import fileserver.common.http.request.CloseRequest;
-import fileserver.common.http.response.Response;
-import fileserver.common.http.response.ResponseWithContent;
+import fileserver.common.httpc.request.CloseRequest;
+import fileserver.common.httpc.response.Response;
+import fileserver.common.httpc.response.ResponseWithContent;
 
 public final class ClientCLI {
     private final Scanner scanner;

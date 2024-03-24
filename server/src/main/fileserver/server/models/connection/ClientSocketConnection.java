@@ -1,4 +1,6 @@
-package fileserver.server.models;
+package fileserver.server.models.connection;
+
+import fileserver.server.models.connection.ClientConnection;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

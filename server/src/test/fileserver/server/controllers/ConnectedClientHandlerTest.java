@@ -1,13 +1,13 @@
 package fileserver.server.controllers;
 
-import fileserver.common.http.request.CloseRequest;
-import fileserver.common.http.request.DeleteRequest;
-import fileserver.common.http.request.GetRequest;
-import fileserver.common.http.request.PutRequest;
-import fileserver.common.http.request.Request;
-import fileserver.common.http.response.Response;
-import fileserver.common.http.response.ResponseWithContent;
-import fileserver.server.models.ClientConnection;
+import fileserver.common.httpc.request.CloseRequest;
+import fileserver.common.httpc.request.DeleteRequest;
+import fileserver.common.httpc.request.GetRequest;
+import fileserver.common.httpc.request.PutRequest;
+import fileserver.common.httpc.request.Request;
+import fileserver.common.httpc.response.Response;
+import fileserver.common.httpc.response.ResponseWithContent;
+import fileserver.server.models.connection.ClientConnection;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,11 +23,10 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class ServerRequestHandlerTest {
+public class ConnectedClientHandlerTest {
     static final Path initial = new File("file").toPath();
     static final Path fresh = new File("file-new").toPath();
     static final String content = "content";
@@ -35,7 +34,7 @@ public class ServerRequestHandlerTest {
     @ParameterizedTest
     @MethodSource("testArgsProvider")
     public void commandToRequestTest(final TestArg params, @TempDir Path tmpDir) throws IOException, ClassNotFoundException {
-        File init = tmpDir.resolve(ServerRequestHandlerTest.initial).toFile();
+        File init = tmpDir.resolve(initial).toFile();
         init.createNewFile();
         try (FileWriter initWriter = new FileWriter(init)) {
             initWriter.write(content);
@@ -43,7 +42,7 @@ public class ServerRequestHandlerTest {
         final ByteArrayInputStream requestIS = getAppropriateRequestIS(params.request);
         final ByteArrayOutputStream responseOS = new ByteArrayOutputStream();
         try (ClientTestConnection connection = new ClientTestConnection(responseOS, requestIS)) {
-            new ServerRequestHandler(tmpDir, connection).workOnce();
+            new ConnectedClientHandler(tmpDir, connection).workOnce();
         }
         final ObjectInputStream resultIS = new ObjectInputStream(
             new ByteArrayInputStream(responseOS.toByteArray())
