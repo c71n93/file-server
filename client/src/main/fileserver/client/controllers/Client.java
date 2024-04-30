@@ -9,7 +9,7 @@ public final class Client {
     final InetAddress serverAddress;
     final int serverPort;
 
-    public Client(final InetAddress serverAddress, final int serverPort) throws IOException {
+    public Client(final InetAddress serverAddress, final int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
     }
@@ -37,7 +37,7 @@ final class Session extends Thread {
 
     public void run() {
         try {
-            new ClientCLI(System.in, connection).work();
+            new ConnectedServerRequester(new ClienCLI(System.in), connection).work();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

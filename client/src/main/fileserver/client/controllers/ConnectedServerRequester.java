@@ -8,32 +8,28 @@ import fileserver.common.httpc.request.CloseRequest;
 import fileserver.common.httpc.response.Response;
 import fileserver.common.httpc.response.ResponseWithContent;
 
-public final class ClientCLI {
-    private final Scanner scanner;
+public final class ConnectedServerRequester {
     private final ServerConnection connection;
+    private final ClienCLI clienCLI;
 
-    public ClientCLI(final InputStream commandIS, final ServerConnection connection) {
-        scanner = new Scanner(commandIS);
+    public ConnectedServerRequester(final ClienCLI clienCLI, final ServerConnection connection) {
         this.connection = connection;
+        this.clienCLI = clienCLI;
     }
 
     public void work() throws IOException {
         ParsedCommand.Command command;
         boolean isNextAction;
         do {
-            System.out.println("Enter action (enter help for help): ");
-            command = new ParsedCommand(scanner.nextLine()).takeCommand();
+            command = clienCLI.nextCommand();
             isNextAction = chooseAction(command);
         } while (isNextAction);
-        scanner.close();
     }
 
     public void workOnce() throws IOException {
         ParsedCommand.Command command;
-        System.out.println("Enter action (enter help for help): ");
-        command = new ParsedCommand(scanner.nextLine()).takeCommand();
+        command = clienCLI.nextCommandOnce();
         chooseAction(command);
-        scanner.close();
     }
 
     private boolean chooseAction(final ParsedCommand.Command command) throws IOException {
@@ -41,25 +37,29 @@ public final class ClientCLI {
         switch (command.type) {
             case GET -> {
                 connection.requestOS().writeObject(((ParsedCommand.GetCommand) command).getRequest());
-                System.out.println("The request was sent.");
+                clienCLI.displayMsg("The request was sent.");
                 getActionResponce();
             }
             case PUT -> {
                 connection.requestOS().writeObject(((ParsedCommand.PutCommand) command).getRequest());
-                System.out.println("The request was sent.");
+                clienCLI.displayMsg("The request was sent.");
                 putActionResponce();
             }
             case DELETE -> {
                 connection.requestOS().writeObject(((ParsedCommand.DeleteCommand) command).getRequest());
-                System.out.println("The request was sent.");
+                clienCLI.displayMsg("The request was sent.");
                 deleteActionResponce();
             }
-            case HELP -> System.out.println(((ParsedCommand.HelpCommand) command).getHelp());
-            case INVALID -> System.out.println("Wrong command, use 'help'");
             case EXIT -> {
                 connection.requestOS().writeObject(new CloseRequest());
                 isNextAction =  false;
             }
+            case HELP -> throw new IllegalStateException(
+                "'Help' command should not have been appeared here"
+            );
+            case INVALID -> throw new IllegalStateException(
+                "'Invalid' command should not have been appeared here"
+            );
             default -> throw new IllegalStateException("Unknown command type");
         }
         return isNextAction;
@@ -74,13 +74,13 @@ public final class ClientCLI {
                     System.out.printf("The content of the file is: %s\n", ((ResponseWithContent) response).getContent());
                 }
                 case NOT_FOUND -> {
-                    System.out.printf("The response says that the file was not found!\n");
+                    System.out.print("The response says that the file was not found!\n");
                 }
                 case FORBIDDEN -> {
-                    System.out.printf("The response says that creating the file was forbidden!\n");
+                    System.out.print("The response says that creating the file was forbidden!\n");
                 }
                 case BAD_REQUEST -> {
-                    System.out.printf("The response says that the request was incorrect!\n");
+                    System.out.print("The response says that the request was incorrect!\n");
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -93,16 +93,16 @@ public final class ClientCLI {
             Response response = (Response) connection.responseIS().readObject();
             switch (response.getType()) {
                 case OK -> {
-                    System.out.printf("The response says that the file was created!\n");
+                    System.out.print("The response says that the file was created!\n");
                 }
                 case NOT_FOUND -> {
-                    System.out.printf("The response says that the file already exist!\n");
+                    System.out.print("The response says that the file already exist!\n");
                 }
                 case FORBIDDEN -> {
-                    System.out.printf("The response says that creating the file was forbidden!\n");
+                    System.out.print("The response says that creating the file was forbidden!\n");
                 }
                 case BAD_REQUEST -> {
-                    System.out.printf("The response says that the request was incorrect!\n");
+                    System.out.print("The response says that the request was incorrect!\n");
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -115,16 +115,16 @@ public final class ClientCLI {
             Response response = (Response) connection.responseIS().readObject();
             switch (response.getType()) {
                 case OK -> {
-                    System.out.printf("The response says that the file was successfully deleted!\n");
+                    System.out.print("The response says that the file was successfully deleted!\n");
                 }
                 case NOT_FOUND -> {
-                    System.out.printf("The response says that the file was not found!\n");
+                    System.out.print("The response says that the file was not found!\n");
                 }
                 case FORBIDDEN -> {
-                    System.out.printf("The response says that creating the file was forbidden!\n");
+                    System.out.print("The response says that creating the file was forbidden!\n");
                 }
                 case BAD_REQUEST -> {
-                    System.out.printf("The response says that the request was incorrect!\n");
+                    System.out.print("The response says that the request was incorrect!\n");
                 }
             }
         } catch (IOException e) {

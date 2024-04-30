@@ -1,11 +1,12 @@
 package fileserver.client.models;
 
+import fileserver.client.controllers.ConnectedServerRequester;
 import fileserver.common.httpc.request.DeleteRequest;
 import fileserver.common.httpc.request.GetRequest;
 import fileserver.common.httpc.request.PutRequest;
 
 /**
- * Class for parsing commands to {@link fileserver.client.controllers.ClientCLI}
+ * Class for parsing commands to {@link ConnectedServerRequester}
  */
 public final class ParsedCommand {
     private final String command;

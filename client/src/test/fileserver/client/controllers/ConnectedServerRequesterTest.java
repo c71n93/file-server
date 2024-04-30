@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public final class ClientCLITest {
+public final class ConnectedServerRequesterTest {
     static final String filename = "file";
     static final String content = "content";
 
@@ -37,18 +37,26 @@ public final class ClientCLITest {
         final ByteArrayInputStream responseIS = getAppropriateResponseIS(params.command);
         final ByteArrayOutputStream requestOS = new ByteArrayOutputStream();
         try (ServerTestConnection connection = new ServerTestConnection(requestOS, responseIS)) {
-            new ClientCLI(commandIS, connection).workOnce();
+            ConnectedServerRequester requester = new ConnectedServerRequester(
+                new ClienCLI(commandIS),
+                connection
+            );
+            if (
+                params.command.equals(ParsedCommand.CommandsType.HELP.name + "\n") ||
+                params.command.equals(ParsedCommand.CommandsType.INVALID.name + "\n")
+            ) {
+                Assertions.assertThrows(IllegalStateException.class, requester::workOnce);
+                return;
+            } else {
+                requester.workOnce();
+            }
         }
         final ObjectInputStream resultIS = new ObjectInputStream(
             new ByteArrayInputStream(requestOS.toByteArray())
         );
-        if (params.command.equals(ParsedCommand.CommandsType.HELP.name + "\n")) {
-            Assertions.assertEquals(0, resultIS.available());
-        } else {
-            Assertions.assertTrue(params.request.isPresent());
-            final Request request = params.request.get();
-            Assertions.assertEquals(request, resultIS.readObject());
-        }
+        Assertions.assertTrue(params.request.isPresent());
+        final Request request = params.request.get();
+        Assertions.assertEquals(request, resultIS.readObject());
     }
 
     /**
@@ -103,6 +111,12 @@ public final class ClientCLITest {
             Arguments.of(
                 new TestArg(
                     String.format("%s\n", ParsedCommand.CommandsType.HELP.name),
+                    Optional.empty()
+                )
+            ),
+            Arguments.of(
+                new TestArg(
+                    String.format("%s\n", ParsedCommand.CommandsType.INVALID.name),
                     Optional.empty()
                 )
             )

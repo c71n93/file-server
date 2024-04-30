@@ -21,7 +21,7 @@ public final class Server {
         try(final ServerSocket serverSocket = new ServerSocket(port, 50, address)) {
             while (true) {
                 try (
-                    final ClientConnection connection = new ClientSocketConnection(
+                    final ClientSocketConnection connection = new ClientSocketConnection(
                         serverSocket.accept()
                     )
                 ) {
@@ -39,9 +39,9 @@ public final class Server {
 
 final class Session extends Thread {
     private final Path dataFolder;
-    private final ClientConnection connection;
+    private final ClientSocketConnection connection;
 
-    Session(final Path dataFolder, final ClientConnection connection) {
+    Session(final Path dataFolder, final ClientSocketConnection connection) {
         this.dataFolder = dataFolder;
         this.connection = connection;
     }

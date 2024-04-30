@@ -9,7 +9,7 @@ import fileserver.server.models.connection.ClientConnection;
 import fileserver.server.models.responders.RequestResponderFactory;
 import fileserver.server.models.responders.RequestResponder;
 
-public class ConnectedClientHandler {
+public final class ConnectedClientHandler {
     private final Path dataFolder;
     private final ClientConnection connection;
 
