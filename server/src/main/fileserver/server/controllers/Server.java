@@ -1,7 +1,7 @@
 package fileserver.server.controllers;
 
+import fileserver.server.models.connection.ClientConnection;
 import fileserver.server.models.connection.ClientSocketConnection;
-
 import java.net.*;
 import java.nio.file.Path;
 
@@ -21,7 +21,7 @@ public final class Server {
         try(final ServerSocket serverSocket = new ServerSocket(port, 50, address)) {
             while (true) {
                 try (
-                    final ClientSocketConnection connection = new ClientSocketConnection(
+                    final ClientConnection connection = new ClientSocketConnection(
                         serverSocket.accept()
                     )
                 ) {
@@ -39,9 +39,9 @@ public final class Server {
 
 final class Session extends Thread {
     private final Path dataFolder;
-    private final ClientSocketConnection connection;
+    private final ClientConnection connection;
 
-    Session(final Path dataFolder, final ClientSocketConnection connection) {
+    Session(final Path dataFolder, final ClientConnection connection) {
         this.dataFolder = dataFolder;
         this.connection = connection;
     }
