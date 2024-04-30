@@ -1,7 +1,8 @@
 package fileserver.client.controllers;
 
 import java.io.*;
-import java.util.Scanner;
+import java.text.Format;
+
 import fileserver.client.models.ParsedCommand;
 import fileserver.client.models.connection.ServerConnection;
 import fileserver.common.httpc.request.CloseRequest;
@@ -38,17 +39,17 @@ public final class ConnectedServerRequester {
             case GET -> {
                 connection.requestOS().writeObject(((ParsedCommand.GetCommand) command).getRequest());
                 clienCLI.displayMsg("The request was sent.");
-                getActionResponce();
+                clienCLI.displayMsg(processResponseWithContent());
             }
             case PUT -> {
                 connection.requestOS().writeObject(((ParsedCommand.PutCommand) command).getRequest());
                 clienCLI.displayMsg("The request was sent.");
-                putActionResponce();
+                clienCLI.displayMsg(processResponse());
             }
             case DELETE -> {
                 connection.requestOS().writeObject(((ParsedCommand.DeleteCommand) command).getRequest());
                 clienCLI.displayMsg("The request was sent.");
-                deleteActionResponce();
+                clienCLI.displayMsg(processResponse());
             }
             case EXIT -> {
                 connection.requestOS().writeObject(new CloseRequest());
@@ -65,72 +66,49 @@ public final class ConnectedServerRequester {
         return isNextAction;
     }
 
-    //TODO: refactor responce funtion (now they are copypast)
-    private void getActionResponce() {
+    private String processResponseWithContent() throws IOException {
         try {
             Response response = (Response) connection.responseIS().readObject();
-            switch (response.getType()) {
-                case OK -> {
-                    System.out.printf("The content of the file is: %s\n", ((ResponseWithContent) response).getContent());
-                }
-                case NOT_FOUND -> {
-                    System.out.print("The response says that the file was not found!\n");
-                }
-                case FORBIDDEN -> {
-                    System.out.print("The response says that creating the file was forbidden!\n");
-                }
-                case BAD_REQUEST -> {
-                    System.out.print("The response says that the request was incorrect!\n");
-                }
+            if (response.getType() == Response.ResponseType.OK) {
+                return String.format(
+                    "The content of the file is: %s\n",
+                    ((ResponseWithContent) response).getContent()
+                );
+            } else {
+                return responseErrorToText(response.getType());
             }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void putActionResponce() {
-        try {
-            Response response = (Response) connection.responseIS().readObject();
-            switch (response.getType()) {
-                case OK -> {
-                    System.out.print("The response says that the file was created!\n");
-                }
-                case NOT_FOUND -> {
-                    System.out.print("The response says that the file already exist!\n");
-                }
-                case FORBIDDEN -> {
-                    System.out.print("The response says that creating the file was forbidden!\n");
-                }
-                case BAD_REQUEST -> {
-                    System.out.print("The response says that the request was incorrect!\n");
-                }
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void deleteActionResponce() {
-        try {
-            Response response = (Response) connection.responseIS().readObject();
-            switch (response.getType()) {
-                case OK -> {
-                    System.out.print("The response says that the file was successfully deleted!\n");
-                }
-                case NOT_FOUND -> {
-                    System.out.print("The response says that the file was not found!\n");
-                }
-                case FORBIDDEN -> {
-                    System.out.print("The response says that creating the file was forbidden!\n");
-                }
-                case BAD_REQUEST -> {
-                    System.out.print("The response says that the request was incorrect!\n");
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            return "Can't read response";
+        }
+    }
+
+    private String processResponse() throws IOException {
+        try {
+            Response response = (Response) connection.responseIS().readObject();
+            if (response.getType() == Response.ResponseType.OK) {
+                return "Done";
+            } else {
+                return responseErrorToText(response.getType());
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return "Can't read response";
+        }
+    }
+
+    private static String responseErrorToText(final Response.ResponseType type) {
+        switch (type) {
+            case NOT_FOUND -> {
+                return "Response error: NOT FOUND";
+            }
+            case FORBIDDEN -> {
+                return "Response error: FORBIDDEN";
+            }
+            case BAD_REQUEST -> {
+                return "Response error: BAD REQUEST";
+            }
+            default -> throw new IllegalStateException("Unknown response error");
         }
     }
 }
