@@ -38,17 +38,14 @@ public final class ConnectedServerRequester {
         switch (command.type) {
             case GET -> {
                 connection.requestOS().writeObject(((ParsedCommand.GetCommand) command).getRequest());
-                clienCLI.displayMsg("The request was sent.");
                 clienCLI.displayMsg(processResponseWithContent());
             }
             case PUT -> {
                 connection.requestOS().writeObject(((ParsedCommand.PutCommand) command).getRequest());
-                clienCLI.displayMsg("The request was sent.");
                 clienCLI.displayMsg(processResponse());
             }
             case DELETE -> {
                 connection.requestOS().writeObject(((ParsedCommand.DeleteCommand) command).getRequest());
-                clienCLI.displayMsg("The request was sent.");
                 clienCLI.displayMsg(processResponse());
             }
             case EXIT -> {
@@ -71,7 +68,7 @@ public final class ConnectedServerRequester {
             Response response = (Response) connection.responseIS().readObject();
             if (response.getType() == Response.ResponseType.OK) {
                 return String.format(
-                    "The content of the file is: %s\n",
+                    "The content of the file is: %s",
                     ((ResponseWithContent) response).getContent()
                 );
             } else {
