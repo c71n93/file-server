@@ -1,7 +1,6 @@
 package fileserver.client.controllers;
 
 import fileserver.client.models.ParsedCommand;
-
 import java.io.InputStream;
 import java.util.Scanner;
 

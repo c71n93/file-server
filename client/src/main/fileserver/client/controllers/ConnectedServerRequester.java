@@ -1,8 +1,6 @@
 package fileserver.client.controllers;
 
 import java.io.*;
-import java.text.Format;
-
 import fileserver.client.models.ParsedCommand;
 import fileserver.client.models.connection.ServerConnection;
 import fileserver.common.httpc.request.CloseRequest;

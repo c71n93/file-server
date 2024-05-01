@@ -1,7 +1,6 @@
 package fileserver.client.controllers;
 
 import fileserver.client.models.connection.ServerSocketConnection;
-
 import java.io.*;
 import java.net.*;
 
@@ -29,6 +28,7 @@ final class Session extends Thread {
         this.connection = connection;
     }
 
+    @Override
     public void run() {
         try {
             new ConnectedServerRequester(new ClienCLI(System.in), connection).work();

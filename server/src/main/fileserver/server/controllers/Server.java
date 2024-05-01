@@ -44,6 +44,7 @@ final class Session extends Thread {
         this.connection = connection;
     }
 
+    @Override
     public void run() {
         try {
             new ConnectedClientHandler(dataFolder, connection).work();
