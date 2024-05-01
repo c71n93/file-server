@@ -1,6 +1,6 @@
 package fileserver.client.models.connection;
 
-import fileserver.client.controllers.ServerConnectionError;
+import fileserver.client.controllers.ServerConnectionException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -21,7 +21,7 @@ public final class ServerSocketConnection implements ServerConnection {
         try {
             this.socket = new Socket(serverAddress, serverPort);
         } catch (IOException e) {
-            throw new ServerConnectionError("Can't create client server connection. " + e.getMessage(), e);
+            throw new ServerConnectionException("Can't create client server connection. " + e.getMessage(), e);
         }
         this.requestOS = new ObjectOutputStream(this.socket.getOutputStream());
         this.responseIS = new ObjectInputStream(this.socket.getInputStream());

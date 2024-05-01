@@ -28,6 +28,7 @@ public final class ConnectedServerRequester {
     public void workOnce() throws IOException {
         ParsedCommand.Command command;
         command = clienCLI.nextCommandOnce();
+
         chooseAction(command);
     }
 
@@ -61,7 +62,7 @@ public final class ConnectedServerRequester {
         return isNextAction;
     }
 
-    private String processResponseWithContent() throws IOException {
+    private String processResponseWithContent() throws ResponseReadingException {
         try {
             Response response = (Response) connection.responseIS().readObject();
             if (response.getType() == Response.ResponseType.OK) {
@@ -73,12 +74,16 @@ public final class ConnectedServerRequester {
                 return responseErrorToText(response.getType());
             }
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return "Can't read response";
+            throw new IllegalStateException("Class of serializable response cannot be found", e);
+        } catch (IOException e) {
+            throw new ResponseReadingException(
+                "Error while reading response with content." + e.getMessage(),
+                e
+            );
         }
     }
 
-    private String processResponse() throws IOException {
+    private String processResponse() throws ResponseReadingException {
         try {
             Response response = (Response) connection.responseIS().readObject();
             if (response.getType() == Response.ResponseType.OK) {
@@ -87,8 +92,12 @@ public final class ConnectedServerRequester {
                 return responseErrorToText(response.getType());
             }
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return "Can't read response";
+            throw new IllegalStateException("Class of serializable response cannot be found", e);
+        } catch (IOException e) {
+            throw new ResponseReadingException(
+                "Error while reading response without content." + e.getMessage(),
+                e
+            );
         }
     }
 
