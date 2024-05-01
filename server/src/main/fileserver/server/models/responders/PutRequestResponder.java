@@ -23,7 +23,7 @@ public final class PutRequestResponder extends DataRequestResponder {
         try {
             if (this.file.exists() || this.file.isDirectory()) {
                 this.connection.responseOS().writeObject(
-                    new Response(Response.ResponseType.NOT_FOUND)
+                    new Response(Response.ResponseType.FORBIDDEN)
                 );
             } else {
                 final FileWriter writer = new FileWriter(this.file);
