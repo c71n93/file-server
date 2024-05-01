@@ -1,6 +1,5 @@
 package fileserver.server.controllers;
 
-import fileserver.server.models.connection.ClientConnection;
 import fileserver.server.models.connection.ClientSocketConnection;
 import java.net.*;
 import java.nio.file.Path;
@@ -20,12 +19,11 @@ public final class Server {
         System.out.println("Server started!");
         try(final ServerSocket serverSocket = new ServerSocket(port, 50, address)) {
             while (true) {
-                try (
-                    final ClientSocketConnection connection = new ClientSocketConnection(
-                        serverSocket.accept()
-                    )
-                ) {
-                    Session session = new Session(dataFolder, connection);
+                try {
+                    Session session = new Session(
+                        dataFolder,
+                        new ClientSocketConnection(serverSocket.accept())
+                    );
                     session.start();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -49,6 +47,7 @@ final class Session extends Thread {
     public void run() {
         try {
             new ConnectedClientHandler(dataFolder, connection).work();
+            connection.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -16,15 +16,9 @@ public final class Client {
 
     public void work() throws IOException {
         System.out.println("Client started!");
-        try (
-            ServerSocketConnection connection = new ServerSocketConnection(
-                serverAddress,
-                serverPort
-            )
-        ) {
-            Session session = new Session(connection);
-            session.start();
-        }
+        new Session(
+            new ServerSocketConnection(serverAddress, serverPort)
+        ).start();
     }
 }
 
@@ -38,6 +32,7 @@ final class Session extends Thread {
     public void run() {
         try {
             new ConnectedServerRequester(new ClienCLI(System.in), connection).work();
+            connection.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
