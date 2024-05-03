@@ -4,12 +4,13 @@ package fileserver.server;
 
 import fileserver.server.controllers.Server;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 
 public class Main {
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             System.out.println("Error: the path to the data folder must be passed as a program argument");
             return;

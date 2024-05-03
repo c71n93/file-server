@@ -19,7 +19,7 @@ public final class GetRequestResponder extends DataRequestResponder {
     }
 
     @Override
-    public void executeAndRespond() {
+    public void executeAndRespond() throws ResponseWritingException {
         try {
             if (!this.file.exists()) {
                 this.connection.responseOS().writeObject(
@@ -30,7 +30,7 @@ public final class GetRequestResponder extends DataRequestResponder {
                 this.connection.responseOS().writeObject(new ResponseWithContent(content));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ResponseWritingException("Unable to send response to client", e);
         }
     }
 }

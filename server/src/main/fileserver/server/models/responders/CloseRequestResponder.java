@@ -11,11 +11,11 @@ public final class CloseRequestResponder extends InfoRequestResponder {
     }
 
     @Override
-    public void executeAndRespond() {
+    public void executeAndRespond() throws ResponseWritingException {
         try {
             connection.responseOS().writeObject(new Response(Response.ResponseType.OK));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ResponseWritingException("Unable to send response to client", e);
         }
     }
 

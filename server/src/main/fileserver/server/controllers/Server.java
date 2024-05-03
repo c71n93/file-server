@@ -1,6 +1,7 @@
 package fileserver.server.controllers;
 
 import fileserver.server.models.connection.ClientSocketConnection;
+import java.io.IOException;
 import java.net.*;
 import java.nio.file.Path;
 
@@ -15,7 +16,7 @@ public final class Server {
         this.port = port;
     }
 
-    public void work() {
+    public void work() throws IOException {
         System.out.println("Server started!");
         try(final ServerSocket serverSocket = new ServerSocket(port, 50, address)) {
             while (true) {
@@ -25,12 +26,15 @@ public final class Server {
                         new ClientSocketConnection(serverSocket.accept())
                     );
                     session.start();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (IOException e) {
+                    throw new ClientConnectionException(
+                        "Unable to set up connection with client.",
+                        e
+                    );
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new ServerSocketException("Unable to create server socket.", e);
         }
     }
 }
@@ -49,8 +53,8 @@ final class Session extends Thread {
         try {
             new ConnectedClientHandler(dataFolder, connection).work();
             connection.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

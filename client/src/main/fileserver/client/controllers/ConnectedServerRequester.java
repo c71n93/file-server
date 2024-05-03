@@ -77,7 +77,7 @@ public final class ConnectedServerRequester {
             throw new IllegalStateException("Class of serializable response cannot be found", e);
         } catch (IOException e) {
             throw new ResponseReadingException(
-                "Error while reading response with content." + e.getMessage(),
+                "Error while reading response with content.",
                 e
             );
         }
@@ -95,7 +95,7 @@ public final class ConnectedServerRequester {
             throw new IllegalStateException("Class of serializable response cannot be found", e);
         } catch (IOException e) {
             throw new ResponseReadingException(
-                "Error while reading response without content." + e.getMessage(),
+                "Error while reading response without content.",
                 e
             );
         }

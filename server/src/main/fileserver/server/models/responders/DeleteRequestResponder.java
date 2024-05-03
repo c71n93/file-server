@@ -18,7 +18,7 @@ public final class DeleteRequestResponder extends DataRequestResponder {
     }
 
     @Override
-    public void executeAndRespond() {
+    public void executeAndRespond() throws ResponseWritingException {
         try {
             if (!this.file.exists()) {
                 connection.responseOS().writeObject(new Response(Response.ResponseType.NOT_FOUND));
@@ -27,7 +27,7 @@ public final class DeleteRequestResponder extends DataRequestResponder {
                 connection.responseOS().writeObject(new Response(Response.ResponseType.OK));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ResponseWritingException("Unable to send response to client", e);
         }
     }
 }

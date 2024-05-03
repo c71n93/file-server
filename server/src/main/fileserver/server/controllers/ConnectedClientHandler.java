@@ -1,5 +1,6 @@
 package fileserver.server.controllers;
 
+import fileserver.server.models.responders.ResponseWritingException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,34 +19,30 @@ public final class ConnectedClientHandler {
         this.connection = connection;
     }
 
-    public void work() {
+    public void work() throws IOException {
         try {
             Files.createDirectories(dataFolder);
             Request request;
             do {
                 request = (Request) connection.requestIS().readObject();
             } while(handleNextRequest(request));
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Class of serializable request cannot be found.", e);
         }
     }
 
-    public void workOnce() {
+    public void workOnce() throws IOException {
         try {
             Files.createDirectories(dataFolder);
             Request request;
             request = (Request) connection.requestIS().readObject();
             handleNextRequest(request);
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Class of serializable request cannot be found.", e);
         }
     }
 
-    private boolean handleNextRequest(Request request) {
+    private boolean handleNextRequest(Request request) throws ResponseWritingException {
         final RequestResponder responder = new RequestResponderFactory(
             request,
             connection,
