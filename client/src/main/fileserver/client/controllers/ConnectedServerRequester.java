@@ -35,16 +35,16 @@ public final class ConnectedServerRequester {
     private boolean chooseAction(final ParsedCommand.Command command) throws IOException {
         boolean isNextAction = true;
         switch (command.type) {
-            case GET -> {
-                connection.requestOS().writeObject(((ParsedCommand.GetCommand) command).getRequest());
+            case DOWNLOAD -> {
+                connection.requestOS().writeObject(((ParsedCommand.DownloadCommand) command).request);
                 clienCLI.displayMsg(processResponseWithContent());
             }
-            case PUT -> {
-                connection.requestOS().writeObject(((ParsedCommand.PutCommand) command).getRequest());
+            case UPLOAD -> {
+                connection.requestOS().writeObject(((ParsedCommand.UploadCommand) command).request);
                 clienCLI.displayMsg(processResponse());
             }
             case DELETE -> {
-                connection.requestOS().writeObject(((ParsedCommand.DeleteCommand) command).getRequest());
+                connection.requestOS().writeObject(((ParsedCommand.DeleteCommand) command).request);
                 clienCLI.displayMsg(processResponse());
             }
             case EXIT -> {

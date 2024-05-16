@@ -68,7 +68,7 @@ public final class ConnectedServerRequesterTest {
     private ByteArrayInputStream getAppropriateResponseIS(String command) throws IOException {
         final ByteArrayOutputStream tmpBOS = new ByteArrayOutputStream();
         final ObjectOutputStream tmpObOS = new ObjectOutputStream(tmpBOS);
-        if (command.split(" ")[0].equals(ParsedCommand.CommandsType.GET.name)) {
+        if (command.split(" ")[0].equals(ParsedCommand.CommandsType.DOWNLOAD.name)) {
             tmpObOS.writeObject(new ResponseWithContent(content));
         } else {
            tmpObOS.writeObject(new Response(Response.ResponseType.OK));
@@ -86,13 +86,13 @@ public final class ConnectedServerRequesterTest {
         return Stream.of(
             Arguments.of(
                 new TestArg(
-                    String.format("%s %s\n", ParsedCommand.CommandsType.GET.name, filename),
+                    String.format("%s %s\n", ParsedCommand.CommandsType.DOWNLOAD.name, filename),
                     Optional.of(new GetRequest("file"))
                 )
             ),
             Arguments.of(
                 new TestArg(
-                    String.format("%s %s %s\n", ParsedCommand.CommandsType.PUT.name, filename, content),
+                    String.format("%s %s %s\n", ParsedCommand.CommandsType.UPLOAD.name, filename, content),
                     Optional.of(new PutRequest("file", "content"))
                 )
             ),
