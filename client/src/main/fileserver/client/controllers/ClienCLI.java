@@ -1,5 +1,6 @@
 package fileserver.client.controllers;
 
+import fileserver.client.models.InvalidPassedFileException;
 import fileserver.client.models.ParsedCommand;
 import java.io.InputStream;
 import java.util.Scanner;
@@ -15,13 +16,18 @@ public final class ClienCLI {
         System.out.println(greetingMsg);
         ParsedCommand.Command command;
         do {
-            command = new ParsedCommand(scanner.nextLine()).takeCommand();
+            try {
+                command = new ParsedCommand(scanner.nextLine()).takeCommand();
+            } catch (InvalidPassedFileException e) {
+                System.out.printf("%s. %s. Try again.", e.getMessage(), e.getCause().getMessage());
+                continue;
+            }
             if (command.type == ParsedCommand.CommandsType.INVALID) {
                 System.out.println("Wrong command, use 'help'");
                 continue;
             }
             if (command.type == ParsedCommand.CommandsType.HELP) {
-                System.out.println(((ParsedCommand.HelpCommand) command).getHelp());
+                System.out.println(ParsedCommand.HelpCommand.help);
                 continue;
             }
             break;
@@ -32,12 +38,16 @@ public final class ClienCLI {
     public ParsedCommand.Command nextCommandOnce() {
         System.out.println(greetingMsg);
         ParsedCommand.Command command;
-        command = new ParsedCommand(scanner.nextLine()).takeCommand();
+        try {
+            command = new ParsedCommand(scanner.nextLine()).takeCommand();
+        } catch (InvalidPassedFileException e) {
+            throw new RuntimeException(e);
+        }
         if (command.type == ParsedCommand.CommandsType.INVALID) {
             System.out.println("Wrong command, use 'help'");
         }
         if (command.type == ParsedCommand.CommandsType.HELP) {
-            System.out.println(((ParsedCommand.HelpCommand) command).getHelp());
+            System.out.println(ParsedCommand.HelpCommand.help);
         }
         return command;
     }

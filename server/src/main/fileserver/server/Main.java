@@ -1,7 +1,5 @@
 package fileserver.server;
 
-//TODO: refactor all try/catch blocks
-
 import fileserver.server.controllers.Server;
 
 import java.io.IOException;

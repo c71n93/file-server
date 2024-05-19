@@ -6,6 +6,7 @@ import fileserver.client.models.connection.ServerConnection;
 import fileserver.common.httpc.request.CloseRequest;
 import fileserver.common.httpc.response.Response;
 import fileserver.common.httpc.response.ResponseWithContent;
+import java.nio.file.Files;
 
 public final class ConnectedServerRequester {
     private final ServerConnection connection;
@@ -28,7 +29,6 @@ public final class ConnectedServerRequester {
     public void workOnce() throws IOException {
         ParsedCommand.Command command;
         command = clienCLI.nextCommandOnce();
-
         chooseAction(command);
     }
 
@@ -36,8 +36,9 @@ public final class ConnectedServerRequester {
         boolean isNextAction = true;
         switch (command.type) {
             case DOWNLOAD -> {
-                connection.requestOS().writeObject(((ParsedCommand.DownloadCommand) command).request);
-                clienCLI.displayMsg(processResponseWithContent());
+                ParsedCommand.DownloadCommand downloadCmd = (ParsedCommand.DownloadCommand) command;
+                connection.requestOS().writeObject(downloadCmd.request);
+                clienCLI.displayMsg(processResponseWithContent(downloadCmd.savedContentFile));
             }
             case UPLOAD -> {
                 connection.requestOS().writeObject(((ParsedCommand.UploadCommand) command).request);
@@ -62,13 +63,18 @@ public final class ConnectedServerRequester {
         return isNextAction;
     }
 
-    private String processResponseWithContent() throws ResponseReadingException {
+    private String processResponseWithContent(final File savedContentFile)
+        throws ResponseReadingException {
         try {
             Response response = (Response) connection.responseIS().readObject();
             if (response.getType() == Response.ResponseType.OK) {
+                writeContentToFile(
+                    ((ResponseWithContent) response).getContent(),
+                    savedContentFile
+                );
                 return String.format(
-                    "The content of the file is: %s",
-                    ((ResponseWithContent) response).getContent()
+                    "The content is saved to file '%s'",
+                    savedContentFile.getPath()
                 );
             } else {
                 return responseErrorToText(response.getType());
@@ -98,6 +104,14 @@ public final class ConnectedServerRequester {
                 "Error while reading response without content.",
                 e
             );
+        }
+    }
+
+    private void writeContentToFile(final String content, final File savedContentFile) {
+        try {
+            Files.writeString(savedContentFile.toPath(), content);
+        } catch (IOException e) {
+            throw new IllegalStateException("Can't write content to file", e);
         }
     }
 

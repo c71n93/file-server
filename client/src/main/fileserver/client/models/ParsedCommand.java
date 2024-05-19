@@ -5,7 +5,10 @@ import fileserver.common.httpc.request.DeleteRequest;
 import fileserver.common.httpc.request.GetRequest;
 import fileserver.common.httpc.request.PutRequest;
 import java.io.File;
-import java.nio.file.Path;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * Class for parsing commands to {@link ConnectedServerRequester}
@@ -17,7 +20,7 @@ public final class ParsedCommand {
         this.command = command;
     }
 
-    public Command takeCommand() {
+    public Command takeCommand() throws InvalidPassedFileException {
         final String[] splitCommand = command.split(" ");
         return switch (CommandsType.value(splitCommand[0])) {
             case DOWNLOAD -> parseDownload(splitCommand);
@@ -29,22 +32,40 @@ public final class ParsedCommand {
         };
     }
 
-    private Command parseDownload(String[] splitCommand) {
-        // download name path
+    private Command parseDownload(String[] splitCommand) throws InvalidPassedFileException {
+        // download filename path
         if (splitCommand.length != 3) {
             return new InvalidCommand();
         }
-        // TODO: to check if file
-        return new DownloadCommand(new GetRequest(splitCommand[1]), Path.of(splitCommand[2]));
+        String filename = splitCommand[1];
+        String path = splitCommand[2];
+        File savedContentFile = new File(path);
+        try (FileWriter ignored = new FileWriter(savedContentFile)) {
+        } catch (IOException e) {
+            throw new InvalidPassedFileException(
+                String.format("Can't write to file %s", path),
+                e
+            );
+        }
+        return new DownloadCommand(new GetRequest(filename), new File(path));
     }
 
-    private Command parseUpload(String[] splitCommand) {
-        // upload path name
+    private Command parseUpload(String[] splitCommand) throws InvalidPassedFileException {
+        // upload path filename
         if (splitCommand.length != 3) {
             return new InvalidCommand();
         }
-        String content = new File(splitCommand[2]).getName(); // TODO: read content from file
-        return new UploadCommand(new PutRequest(splitCommand[1], content));
+        String path = splitCommand[1];
+        String filename = splitCommand[2];
+        try {
+            String content = Files.readString(Paths.get(path));
+            return new UploadCommand(new PutRequest(filename, content));
+        } catch (IOException e) {
+            throw new InvalidPassedFileException(
+                String.format("Error occurred while reading content from file %s", path),
+                e
+            );
+        }
     }
 
     private Command parseDelete(String[] splitCommand) {
@@ -63,13 +84,13 @@ public final class ParsedCommand {
     }
 
     public static class DownloadCommand extends Command {
-        public final Path downloadedFile;
+        public final File savedContentFile;
         public final GetRequest request;
 
-        DownloadCommand(final GetRequest request, final Path downloadedFile) {
+        DownloadCommand(final GetRequest request, final File savedFile) {
             super(CommandsType.DOWNLOAD);
             this.request = request;
-            this.downloadedFile = downloadedFile;
+            this.savedContentFile = savedFile;
         }
     }
 
@@ -92,7 +113,13 @@ public final class ParsedCommand {
     }
 
     public static class HelpCommand extends Command {
-        public final static String help = "HELP"; //TODO: add help message
+        public final static String help = """
+            commands:
+                download <file-on-server> <local-file> - downloads file from server to a local file
+                upload <local-file> <file-on-server> - uploads local file to a file on server
+                delete <file-on-server> - deletes file on server
+                exit - end current client session
+                help - show this help message"""; //TODO: add help message
         HelpCommand() {
             super(CommandsType.HELP);
         }
