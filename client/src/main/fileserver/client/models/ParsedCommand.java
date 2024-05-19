@@ -4,6 +4,11 @@ import fileserver.client.controllers.ConnectedServerRequester;
 import fileserver.common.httpc.request.DeleteRequest;
 import fileserver.common.httpc.request.GetRequest;
 import fileserver.common.httpc.request.PutRequest;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * Class for parsing commands to {@link ConnectedServerRequester}
@@ -11,11 +16,15 @@ import fileserver.common.httpc.request.PutRequest;
 public final class ParsedCommand {
     private final String command;
 
-    public Command takeCommand() {
+    public ParsedCommand(String command) {
+        this.command = command;
+    }
+
+    public Command takeCommand() throws InvalidPassedFileException {
         final String[] splitCommand = command.split(" ");
         return switch (CommandsType.value(splitCommand[0])) {
-            case GET -> parseGet(splitCommand);
-            case PUT -> parsePut(splitCommand);
+            case DOWNLOAD -> parseDownload(splitCommand);
+            case UPLOAD -> parseUpload(splitCommand);
             case DELETE -> parseDelete(splitCommand);
             case EXIT -> new ExitCommand();
             case HELP -> new HelpCommand();
@@ -23,18 +32,40 @@ public final class ParsedCommand {
         };
     }
 
-    private Command parseGet(String[] splitCommand) {
-        if (splitCommand.length != 2) {
-            return new InvalidCommand();
-        }
-        return new GetCommand(new GetRequest(splitCommand[1]));
-    }
-
-    private Command parsePut(String[] splitCommand) {
+    private Command parseDownload(String[] splitCommand) throws InvalidPassedFileException {
+        // download filename path
         if (splitCommand.length != 3) {
             return new InvalidCommand();
         }
-        return new PutCommand(new PutRequest(splitCommand[1], splitCommand[2]));
+        String filename = splitCommand[1];
+        String path = splitCommand[2];
+        File savedContentFile = new File(path);
+        try (FileWriter ignored = new FileWriter(savedContentFile)) {
+        } catch (IOException e) {
+            throw new InvalidPassedFileException(
+                String.format("Can't write to file %s", path),
+                e
+            );
+        }
+        return new DownloadCommand(new GetRequest(filename), new File(path));
+    }
+
+    private Command parseUpload(String[] splitCommand) throws InvalidPassedFileException {
+        // upload path filename
+        if (splitCommand.length != 3) {
+            return new InvalidCommand();
+        }
+        String path = splitCommand[1];
+        String filename = splitCommand[2];
+        try {
+            String content = Files.readString(Paths.get(path));
+            return new UploadCommand(new PutRequest(filename, content));
+        } catch (IOException e) {
+            throw new InvalidPassedFileException(
+                String.format("Error occurred while reading content from file %s", path),
+                e
+            );
+        }
     }
 
     private Command parseDelete(String[] splitCommand) {
@@ -42,10 +73,6 @@ public final class ParsedCommand {
             return new InvalidCommand();
         }
         return new DeleteCommand(new DeleteRequest(splitCommand[1]));
-    }
-
-    public ParsedCommand(String command) {
-        this.command = command;
     }
 
     public static class Command {
@@ -56,53 +83,45 @@ public final class ParsedCommand {
         }
     }
 
-    public static class GetCommand extends Command {
-        private final GetRequest request;
+    public static class DownloadCommand extends Command {
+        public final File savedContentFile;
+        public final GetRequest request;
 
-        GetCommand(GetRequest request) {
-            super(CommandsType.GET);
+        DownloadCommand(final GetRequest request, final File savedFile) {
+            super(CommandsType.DOWNLOAD);
             this.request = request;
-        }
-
-        public GetRequest getRequest() {
-            return this.request;
+            this.savedContentFile = savedFile;
         }
     }
 
-    public static class PutCommand extends Command {
-        private final PutRequest request;
+    public static class UploadCommand extends Command {
+        public final PutRequest request;
 
-        PutCommand(PutRequest request) {
-            super(CommandsType.PUT);
+        UploadCommand(PutRequest request) {
+            super(CommandsType.UPLOAD);
             this.request = request;
-        }
-
-        public PutRequest getRequest() {
-            return this.request;
         }
     }
 
     public static class DeleteCommand extends Command {
-        private final DeleteRequest request;
+        public final DeleteRequest request;
 
         DeleteCommand(DeleteRequest request) {
             super(CommandsType.DELETE);
             this.request = request;
         }
-
-        public DeleteRequest getRequest() {
-            return this.request;
-        }
     }
 
     public static class HelpCommand extends Command {
-        private final static String help = "HELP"; //TODO: add help message
+        public final static String help = """
+            commands:
+                download <file-on-server> <local-file> - downloads file from server to a local file
+                upload <local-file> <file-on-server> - uploads local file to a file on server
+                delete <file-on-server> - deletes file on server
+                exit - end current client session
+                help - show this help message"""; //TODO: add help message
         HelpCommand() {
             super(CommandsType.HELP);
-        }
-
-        public String getHelp() {
-            return help;
         }
     }
 
@@ -119,8 +138,8 @@ public final class ParsedCommand {
     }
 
     public enum CommandsType {
-        GET("get"),
-        PUT("put"),
+        DOWNLOAD("download"),
+        UPLOAD("upload"),
         DELETE("delete"),
         HELP("help"),
         EXIT("exit"),

@@ -26,9 +26,14 @@ public final class PutRequestResponder extends DataRequestResponder {
                     new Response(Response.ResponseType.FORBIDDEN)
                 );
             } else {
-                final FileWriter writer = new FileWriter(this.file);
-                writer.write(((PutRequest) this.request).getFileContent());
-                writer.close();
+                try (final FileWriter writer = new FileWriter(this.file)) {
+                    writer.write(((PutRequest) this.request).getFileContent());
+                } catch (IOException e) {
+                    this.connection.responseOS().writeObject(
+                        new Response(Response.ResponseType.FORBIDDEN)
+                    );
+                    return;
+                }
                 this.connection.responseOS().writeObject(new Response(Response.ResponseType.OK));
             }
         } catch (IOException e) {

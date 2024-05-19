@@ -9,7 +9,11 @@ import fileserver.common.httpc.request.PutRequest;
 import fileserver.common.httpc.request.Request;
 import fileserver.common.httpc.response.Response;
 import fileserver.common.httpc.response.ResponseWithContent;
+import java.io.File;
+import java.nio.file.Files;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -24,9 +28,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public final class ConnectedServerRequesterTest {
-    static final String filename = "file";
-    static final String content = "content";
+final class ConnectedServerRequesterTest {
+    private static final String filename = "file";
+    private static final String content = "content";
+    private static final File savedContentFile = new File("./file");
+
+    @BeforeEach
+    public void init() throws IOException {
+        savedContentFile.createNewFile();
+        Files.writeString(savedContentFile.toPath(), content);
+    }
+
+    @AfterEach
+    public void cleanUp() {
+        savedContentFile.delete();
+    }
 
     @ParameterizedTest
     @MethodSource("testArgsProvider")
@@ -68,7 +84,7 @@ public final class ConnectedServerRequesterTest {
     private ByteArrayInputStream getAppropriateResponseIS(String command) throws IOException {
         final ByteArrayOutputStream tmpBOS = new ByteArrayOutputStream();
         final ObjectOutputStream tmpObOS = new ObjectOutputStream(tmpBOS);
-        if (command.split(" ")[0].equals(ParsedCommand.CommandsType.GET.name)) {
+        if (command.split(" ")[0].equals(ParsedCommand.CommandsType.DOWNLOAD.name)) {
             tmpObOS.writeObject(new ResponseWithContent(content));
         } else {
            tmpObOS.writeObject(new Response(Response.ResponseType.OK));
@@ -86,13 +102,13 @@ public final class ConnectedServerRequesterTest {
         return Stream.of(
             Arguments.of(
                 new TestArg(
-                    String.format("%s %s\n", ParsedCommand.CommandsType.GET.name, filename),
+                    String.format("%s %s %s\n", ParsedCommand.CommandsType.DOWNLOAD.name, filename, savedContentFile.toPath()),
                     Optional.of(new GetRequest("file"))
                 )
             ),
             Arguments.of(
                 new TestArg(
-                    String.format("%s %s %s\n", ParsedCommand.CommandsType.PUT.name, filename, content),
+                    String.format("%s %s %s\n", ParsedCommand.CommandsType.UPLOAD.name, savedContentFile.toPath(), filename),
                     Optional.of(new PutRequest("file", "content"))
                 )
             ),

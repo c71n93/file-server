@@ -26,14 +26,14 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class ConnectedClientHandlerTest {
-    static final Path initial = new File("file").toPath();
-    static final Path fresh = new File("file-new").toPath();
+class ConnectedClientHandlerTest {
+    static final Path initial = Path.of("file");
+    static final Path fresh = Path.of("file-new");
     static final String content = "content";
 
     @ParameterizedTest
     @MethodSource("testArgsProvider")
-    public void commandToRequestTest(final TestArg params, @TempDir Path tmpDir) throws IOException, ClassNotFoundException {
+    public void requestToResponseTest(final TestArg params, @TempDir Path tmpDir) throws IOException, ClassNotFoundException {
         File init = tmpDir.resolve(initial).toFile();
         init.createNewFile();
         try (FileWriter initWriter = new FileWriter(init)) {
