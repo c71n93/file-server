@@ -19,7 +19,7 @@ public final class ClienCLI {
             try {
                 command = new ParsedCommand(scanner.nextLine()).takeCommand();
             } catch (InvalidPassedFileException e) {
-                System.out.printf("%s. %s. Try again.", e.getMessage(), e.getCause().getMessage());
+                System.out.printf("%s. Caused by: %s. Try again.\n", e.getMessage(), e.getCause().getMessage());
                 continue;
             }
             if (command.type == ParsedCommand.CommandsType.INVALID) {

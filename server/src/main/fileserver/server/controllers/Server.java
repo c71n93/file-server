@@ -17,7 +17,7 @@ public final class Server {
     }
 
     public void work() throws IOException {
-        System.out.println("Server started!");
+        System.out.printf("Server started!\n\taddress: %s\n\tport: %d\n", address.toString(), port);
         try(final ServerSocket serverSocket = new ServerSocket(port, 50, address)) {
             while (true) {
                 try {

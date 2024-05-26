@@ -119,7 +119,7 @@ public final class ParsedCommand {
                 upload <local-file> <file-on-server> - uploads local file to a file on server
                 delete <file-on-server> - deletes file on server
                 exit - end current client session
-                help - show this help message"""; //TODO: add help message
+                help - show this help message""";
         HelpCommand() {
             super(CommandsType.HELP);
         }
